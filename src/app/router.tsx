@@ -5,6 +5,8 @@ import { IssueLibraryPage } from '@/pages/IssueLibraryPage';
 import { ProviderDetailPage } from '@/pages/ProviderDetailPage';
 import { ProviderIssueDetailPage } from '@/pages/ProviderIssueDetailPage';
 
+const basename = import.meta.env.BASE_URL === '/' ? undefined : import.meta.env.BASE_URL;
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -19,4 +21,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+], { basename });
