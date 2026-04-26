@@ -1,125 +1,72 @@
-import { FormEvent, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Save } from "lucide-react";
-import { StatusPill } from "../components/issues/StatusPill";
-import { formatDateTime } from "../domain/format";
-import type { ProviderIssueStatus } from "../domain/types";
-import { getCdiForProvider, getClinicForProvider } from "../domain/selectors";
-import { useAppStore } from "../store/useAppStore";
-
-const statuses: ProviderIssueStatus[] = ["Active", "Improving", "Resolved", "Archived"];
+import { Link, useParams } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
+import { getProvider, getProviderIssue } from '@/store/selectors';
+import { Badge } from '@/components/ui/Badge';
+import { ProviderIssueForm } from '@/components/provider/ProviderIssueForm';
 
 export function ProviderIssueDetailPage() {
-  const { providerId = "", providerIssueId = "" } = useParams();
-  const entities = useAppStore((state) => state.entities);
-  const updateProviderIssueRecord = useAppStore((state) => state.updateProviderIssueRecord);
-  const provider = entities.providers[providerId];
-  const record = entities.providerIssueRecords[providerIssueId];
-  const issueLabel = record ? entities.issueLabels[record.issueLabelId] : undefined;
-  const clinic = provider ? getClinicForProvider(entities, provider.id) : undefined;
-  const cdi = provider ? getCdiForProvider(entities, provider.id) : undefined;
-  const [status, setStatus] = useState<ProviderIssueStatus>("Active");
-  const [notesExamples, setNotesExamples] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
+  const { providerId = '', providerIssueId = '' } = useParams<{
+    providerId: string;
+    providerIssueId: string;
+  }>();
 
-  useEffect(() => {
-    if (record) {
-      setStatus(record.status);
-      setNotesExamples(record.notesExamples);
-    }
-  }, [record]);
+  const provider = useAppStore((s) => getProvider(s, providerId));
+  const issue = useAppStore((s) => getProviderIssue(s, providerIssueId));
+  const label = useAppStore((s) =>
+    issue ? s.issueLabels[issue.issueLabelId] : undefined,
+  );
 
-  if (!provider || !record || !issueLabel || record.providerId !== provider.id) {
+  if (!provider || !issue || issue.providerId !== provider.id) {
     return (
-      <main className="page-shell">
-        <Link className="ghost-button w-fit" to={provider ? `/providers/${provider.id}` : "/"}>
-          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <h1 className="text-xl font-semibold text-ink">Issue not found</h1>
+        <p className="mt-2 text-sm text-ink-muted">
+          That provider/issue pairing does not exist.
+        </p>
+        <Link
+          to={providerId ? `/providers/${providerId}` : '/'}
+          className="mt-4 inline-flex items-center gap-1 text-sm text-accent-specialist hover:underline"
+        >
+          <ChevronLeft className="h-4 w-4" />
           Back
         </Link>
-        <p className="empty-copy mt-8">Provider issue record not found.</p>
-      </main>
+      </div>
     );
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const result = updateProviderIssueRecord(record.id, { status, notesExamples });
-    setMessage(result.message);
-  }
-
   return (
-    <main className="page-shell">
-      <header className="page-header">
-        <div>
-          <Link className="ghost-button mb-4 w-fit" to={`/providers/${provider.id}`}>
-            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-            Provider
+    <div className="mx-auto max-w-3xl px-6 py-8">
+      <Link
+        to={`/providers/${provider.id}`}
+        className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+        Back to {provider.name}
+      </Link>
+
+      <header className="mt-3 border-b border-line pb-5">
+        <Badge tone="amber">Provider Issue</Badge>
+        <h1 className="mt-2 text-2xl font-semibold text-ink">
+          {label?.name ?? 'Unknown label'}
+        </h1>
+        <div className="mt-1 text-sm text-ink-muted">
+          for{' '}
+          <Link
+            to={`/providers/${provider.id}`}
+            className="text-ink hover:underline"
+          >
+            {provider.name}
           </Link>
-          <p className="eyebrow">Provider issue detail</p>
-          <h1 className="page-title">{issueLabel.name}</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            {provider.name} · {clinic?.name ?? "No clinic"} · {cdi?.name ?? "No CDI specialist"}
-          </p>
+          {provider.specialty && (
+            <span className="text-ink-faint"> · {provider.specialty}</span>
+          )}
         </div>
-        <StatusPill status={record.status} />
       </header>
 
-      <section className="detail-edit-grid">
-        <form className="surface-panel space-y-5" onSubmit={handleSubmit}>
-          <div>
-            <p className="eyebrow">Edit provider-specific record</p>
-            <h2 className="section-heading">Status and notes/examples</h2>
-          </div>
-          <label className="field-label">
-            Status
-            <select
-              className="select-input"
-              onChange={(event) => setStatus(event.target.value as ProviderIssueStatus)}
-              value={status}
-            >
-              {statuses.map((statusOption) => (
-                <option key={statusOption} value={statusOption}>
-                  {statusOption}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label">
-            Notes/examples
-            <textarea
-              className="textarea-input min-h-72"
-              onChange={(event) => setNotesExamples(event.target.value)}
-              value={notesExamples}
-            />
-          </label>
-          <button className="primary-button w-fit" type="submit">
-            <Save aria-hidden="true" className="h-4 w-4" />
-            Save Changes
-          </button>
-          {message ? <p className="text-sm text-slate-600">{message}</p> : null}
-        </form>
-
-        <aside className="surface-panel space-y-5">
-          <div>
-            <p className="eyebrow">Global label description</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{issueLabel.description || "No description added."}</p>
-          </div>
-          <div className="record-meta-grid">
-            <div>
-              <span>Created</span>
-              <strong>{formatDateTime(record.createdAt)}</strong>
-            </div>
-            <div>
-              <span>Updated</span>
-              <strong>{formatDateTime(record.updatedAt)}</strong>
-            </div>
-            <div>
-              <span>Resolved</span>
-              <strong>{formatDateTime(record.resolvedAt)}</strong>
-            </div>
-          </div>
-        </aside>
-      </section>
-    </main>
+      <div className="mt-6">
+        <ProviderIssueForm issue={issue} />
+      </div>
+    </div>
   );
 }

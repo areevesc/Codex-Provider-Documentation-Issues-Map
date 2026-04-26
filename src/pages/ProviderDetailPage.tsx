@@ -1,129 +1,110 @@
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
-import { AssignExistingIssueForm } from "../components/issues/AssignExistingIssueForm";
-import { StatusPill } from "../components/issues/StatusPill";
-import { formatDateTime } from "../domain/format";
+import { Link, useParams } from 'react-router-dom';
+import { ChevronLeft, Home } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
 import {
-  getCdiForProvider,
   getClinicForProvider,
-  getCurrentIssueDetailsForProvider,
-  getHistoricalIssueDetailsForProvider
-} from "../domain/selectors";
-import { useAppStore } from "../store/useAppStore";
+  getProvider,
+  getSpecialistForProvider,
+} from '@/store/selectors';
+import { Badge } from '@/components/ui/Badge';
+import { ProviderActiveIssuesSection } from '@/components/provider/ProviderActiveIssuesSection';
+import { ProviderHistorySection } from '@/components/provider/ProviderHistorySection';
+import { graphNodeId } from '@/lib/ids';
 
+/**
+ * Provider detail page: full structured view for one provider with separate
+ * active and historical issue sections.
+ */
 export function ProviderDetailPage() {
-  const { providerId = "" } = useParams();
-  const entities = useAppStore((state) => state.entities);
-  const provider = entities.providers[providerId];
+  const { providerId = '' } = useParams<{ providerId: string }>();
+  const provider = useAppStore((s) => getProvider(s, providerId));
+  const clinic = useAppStore((s) => getClinicForProvider(s, providerId));
+  const specialist = useAppStore((s) => getSpecialistForProvider(s, providerId));
+  const setSelection = useAppStore((s) => s.setSelection);
 
   if (!provider) {
     return (
-      <main className="page-shell">
-        <Link className="ghost-button w-fit" to="/">
-          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-          Graph
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <h1 className="text-xl font-semibold text-ink">Provider not found</h1>
+        <p className="mt-2 text-sm text-ink-muted">
+          The provider id <code>{providerId}</code> does not exist in the current dataset.
+        </p>
+        <Link
+          to="/"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm text-accent-specialist hover:underline"
+        >
+          <Home className="h-4 w-4" /> Back to graph
         </Link>
-        <p className="empty-copy mt-8">Provider not found.</p>
-      </main>
+      </div>
     );
   }
 
-  const clinic = getClinicForProvider(entities, provider.id);
-  const cdi = getCdiForProvider(entities, provider.id);
-  const currentIssues = getCurrentIssueDetailsForProvider(entities, provider.id);
-  const historicalIssues = getHistoricalIssueDetailsForProvider(entities, provider.id);
+  function openInGraph() {
+    if (!provider) return;
+    setSelection(graphNodeId.provider(provider.id), 'provider');
+  }
 
   return (
-    <main className="page-shell">
-      <header className="page-header">
-        <div>
-          <Link className="ghost-button mb-4 w-fit" to="/">
-            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
-            Graph
-          </Link>
-          <p className="eyebrow">Provider detail</p>
-          <h1 className="page-title">{provider.name}</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            {clinic?.name ?? "No clinic"} · {cdi?.name ?? "No CDI specialist"}
-          </p>
-        </div>
-      </header>
+    <div className="mx-auto max-w-5xl px-6 py-8">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+        Back to graph
+      </Link>
 
-      <section className="provider-detail-grid">
-        <section className="surface-panel">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="eyebrow">Current</p>
-              <h2 className="section-heading">Active and improving issues</h2>
-            </div>
-            <span className="mini-stat">{currentIssues.length} current</span>
-          </div>
-          <div className="mt-5 space-y-3">
-            {currentIssues.length === 0 ? (
-              <p className="empty-copy">No current issues assigned to this provider.</p>
-            ) : (
-              currentIssues.map(({ record, issueLabel }) => (
-                <article className="issue-record-row" key={record.id}>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-semibold text-slate-950">{issueLabel.name}</h3>
-                      <StatusPill status={record.status} />
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{issueLabel.description}</p>
-                    <p className="mt-2 line-clamp-2 text-sm text-slate-500">
-                      {record.notesExamples || "No notes/examples added yet."}
-                    </p>
-                  </div>
-                  <Link className="secondary-button shrink-0" to={`/providers/${provider.id}/issues/${record.id}`}>
-                    <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
-                    Open
-                  </Link>
-                </article>
-              ))
+      <header className="mt-3 border-b border-line pb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <Badge tone="green">Provider</Badge>
+            <h1 className="mt-2 text-2xl font-semibold text-ink">{provider.name}</h1>
+            {provider.specialty && (
+              <div className="mt-1 text-sm text-ink-muted">{provider.specialty}</div>
             )}
           </div>
-        </section>
-
-        <aside className="surface-panel">
-          <p className="eyebrow">Assign</p>
-          <h2 className="section-heading">Existing issue label</h2>
-          <div className="mt-4">
-            <AssignExistingIssueForm providerId={provider.id} />
-          </div>
-        </aside>
-      </section>
-
-      <section className="surface-panel">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="eyebrow">History</p>
-            <h2 className="section-heading">Resolved and archived issues</h2>
-          </div>
-          <span className="mini-stat">{historicalIssues.length} historical</span>
+          <Link
+            to="/"
+            onClick={openInGraph}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-line bg-surface-panel px-3 py-1.5 text-xs text-ink-muted hover:bg-surface-subtle hover:text-ink"
+          >
+            Open in graph
+          </Link>
         </div>
-        <div className="mt-5 space-y-3">
-          {historicalIssues.length === 0 ? (
-            <p className="empty-copy">No resolved or archived issues for this provider.</p>
-          ) : (
-            historicalIssues.map(({ record, issueLabel }) => (
-              <article className="issue-record-row" key={record.id}>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-base font-semibold text-slate-950">{issueLabel.name}</h3>
-                    <StatusPill status={record.status} />
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{record.notesExamples}</p>
-                  <p className="mt-2 text-xs text-slate-500">Resolved: {formatDateTime(record.resolvedAt)}</p>
-                </div>
-                <Link className="secondary-button shrink-0" to={`/providers/${provider.id}/issues/${record.id}`}>
-                  <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
-                  Open
-                </Link>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
-    </main>
+
+        <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+          <Field label="Clinic">
+            {clinic ? (
+              <span className="text-ink">{clinic.name}</span>
+            ) : (
+              <span className="text-ink-muted">—</span>
+            )}
+          </Field>
+          <Field label="CDI Specialist">
+            {specialist ? (
+              <span className="text-ink">{specialist.name}</span>
+            ) : (
+              <span className="text-ink-muted">Unassigned</span>
+            )}
+          </Field>
+        </dl>
+      </header>
+
+      <div className="mt-6">
+        <ProviderActiveIssuesSection providerId={provider.id} />
+        <ProviderHistorySection providerId={provider.id} />
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+        {label}
+      </dt>
+      <dd className="mt-0.5">{children}</dd>
+    </div>
   );
 }

@@ -1,224 +1,220 @@
-import { create } from "zustand";
-import { loadAppEntities, resetStoredEntities, saveAppEntities } from "../data/storage";
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
-  AppEntities,
-  EntityId,
-  GraphNodeRef,
+  CDISpecialist,
+  Clinic,
+  HealthSystem,
   IssueLabel,
-  MutationResult,
-  ProviderIssueRecord,
-  ProviderIssueStatus
-} from "../domain/types";
-import { isCurrentIssueStatus, values } from "../domain/selectors";
+  Provider,
+  ProviderIssue,
+  IssueStatus,
+} from '@/types/domain';
+import type { NodeType } from '@/types/graph';
+import { seedRepository } from '@/data/repository/seedRepository';
+import { newId, graphNodeId } from '@/lib/ids';
+import { nowIso } from '@/lib/dates';
 
-interface AppStore {
-  entities: AppEntities;
-  selectedNode: GraphNodeRef | null;
-  selectedCdiSpecialistId: EntityId | null;
+const STORAGE_KEY = 'cdi-prototype';
+const STORAGE_VERSION = 2;
+
+type ById<T> = Record<string, T>;
+
+function indexById<T extends { id: string }>(items: readonly T[]): ById<T> {
+  const out: ById<T> = {};
+  for (const item of items) out[item.id] = item;
+  return out;
+}
+
+interface EntitiesSlice {
+  healthSystems: ById<HealthSystem>;
+  specialists: ById<CDISpecialist>;
+  clinics: ById<Clinic>;
+  providers: ById<Provider>;
+  issueLabels: ById<IssueLabel>;
+  providerIssues: ById<ProviderIssue>;
+}
+
+interface UiSlice {
+  selectedNodeId: string | null;
+  selectedNodeType: NodeType | null;
+  specialistFilterId: string | null;
   searchQuery: string;
-  selectNode: (node: GraphNodeRef | null) => void;
-  setSelectedCdiSpecialistId: (id: EntityId | null) => void;
-  setSearchQuery: (query: string) => void;
-  assignIssueToProvider: (providerId: EntityId, issueLabelId: EntityId) => MutationResult;
-  updateProviderIssueRecord: (
-    providerIssueRecordId: EntityId,
-    patch: Partial<Pick<ProviderIssueRecord, "status" | "notesExamples">>
-  ) => MutationResult;
-  createIssueLabel: (input: Pick<IssueLabel, "name" | "description">) => MutationResult;
-  editIssueLabelDescription: (issueLabelId: EntityId, description: string) => MutationResult;
-  resetDemoData: () => void;
+  visibleNodeTypes: Record<NodeType, boolean>;
+  graphLayoutPositions: Record<string, { x: number; y: number }>;
+  /** When a label is selected from within a hierarchy context, this holds the
+   *  provider IDs in scope so the right panel can show a scoped view. Null
+   *  means global (e.g. selected from search or Issue Library). */
+  labelScopeProviderIds: string[] | null;
 }
 
-function nowIso() {
-  return new Date().toISOString();
+export interface AppState extends EntitiesSlice, UiSlice {
+  // selection
+  setSelection(id: string | null, type: NodeType | null): void;
+  clearSelection(): void;
+  /** Select a label and remember which provider IDs it was opened from. */
+  selectLabelInScope(labelId: string, providerIds: string[]): void;
+
+  // ui
+  setSpecialistFilter(id: string | null): void;
+  setSearchQuery(q: string): void;
+  setVisibleNodeTypes(updates: Partial<Record<NodeType, boolean>>): void;
+  saveLayoutPositions(positions: Record<string, { x: number; y: number }>): void;
+
+  // mutations — provider issues
+  assignIssueToProvider(
+    providerId: string,
+    issueLabelId: string,
+    initialNotes?: string,
+  ): ProviderIssue;
+  updateProviderIssue(
+    id: string,
+    updates: Partial<Pick<ProviderIssue, 'status' | 'notes'>>,
+  ): void;
+
+  // mutations — issue labels
+  createIssueLabel(name: string, description: string): IssueLabel;
+  updateIssueLabel(id: string, updates: Partial<Pick<IssueLabel, 'name' | 'description'>>): void;
+
+  // dev
+  resetToSeed(): void;
 }
 
-function slugify(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 42);
+function initialEntities(): EntitiesSlice {
+  const seed = seedRepository.loadAll();
+  return {
+    healthSystems: indexById(seed.healthSystems),
+    specialists: indexById(seed.specialists),
+    clinics: indexById(seed.clinics),
+    providers: indexById(seed.providers),
+    issueLabels: indexById(seed.issueLabels),
+    providerIssues: indexById(seed.providerIssues),
+  };
 }
 
-function saveAndReturn(entities: AppEntities) {
-  saveAppEntities(entities);
-  return entities;
+function initialUi(): UiSlice {
+  return {
+    selectedNodeId: null,
+    selectedNodeType: null,
+    specialistFilterId: null,
+    searchQuery: '',
+    visibleNodeTypes: { healthSystem: true, specialist: true, clinic: true, provider: true, label: true },
+    graphLayoutPositions: {},
+    labelScopeProviderIds: null,
+  };
 }
 
-function updateResolvedAt(status: ProviderIssueStatus, previous: ProviderIssueRecord) {
-  if (status === "Resolved") {
-    return previous.resolvedAt ?? nowIso();
-  }
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      ...initialEntities(),
+      ...initialUi(),
 
-  return undefined;
-}
+      setSelection(id, type) {
+        set({ selectedNodeId: id, selectedNodeType: type, labelScopeProviderIds: null });
+      },
+      clearSelection() {
+        set({ selectedNodeId: null, selectedNodeType: null, labelScopeProviderIds: null });
+      },
+      selectLabelInScope(labelId, providerIds) {
+        set({
+          selectedNodeId: graphNodeId.label(labelId),
+          selectedNodeType: 'label',
+          labelScopeProviderIds: providerIds,
+        });
+      },
 
-export const useAppStore = create<AppStore>((set, get) => ({
-  entities: loadAppEntities(),
-  selectedNode: null,
-  selectedCdiSpecialistId: null,
-  searchQuery: "",
-  selectNode: (node) => set({ selectedNode: node }),
-  setSelectedCdiSpecialistId: (id) =>
-    set((state) => ({
-      selectedCdiSpecialistId: id,
-      selectedNode: state.selectedNode?.type === "cdi" ? (id ? { type: "cdi", id } : null) : state.selectedNode
-    })),
-  setSearchQuery: (query) => set({ searchQuery: query }),
-  assignIssueToProvider: (providerId, issueLabelId) => {
-    const { entities } = get();
-    const provider = entities.providers[providerId];
-    const issueLabel = entities.issueLabels[issueLabelId];
+      setSpecialistFilter(id) {
+        set({ specialistFilterId: id });
+      },
+      setSearchQuery(q) {
+        set({ searchQuery: q });
+      },
+      setVisibleNodeTypes(updates) {
+        set((s) => ({ visibleNodeTypes: { ...s.visibleNodeTypes, ...updates } }));
+      },
+      saveLayoutPositions(positions) {
+        set({ graphLayoutPositions: positions });
+      },
 
-    if (!provider || !issueLabel) {
-      return { ok: false, message: "Choose a valid provider and issue label." };
-    }
+      assignIssueToProvider(providerId, issueLabelId, initialNotes = '') {
+        const id = newId('providerIssue');
+        const now = nowIso();
+        const record: ProviderIssue = {
+          id,
+          providerId,
+          issueLabelId,
+          status: 'Active',
+          notes: initialNotes,
+          createdAt: now,
+          updatedAt: now,
+        };
+        set((s) => ({
+          providerIssues: { ...s.providerIssues, [id]: record },
+        }));
+        return record;
+      },
 
-    const existing = values(entities.providerIssueRecords).find(
-      (record) => record.providerId === providerId && record.issueLabelId === issueLabelId
-    );
-
-    if (existing && isCurrentIssueStatus(existing.status)) {
-      return { ok: false, message: "That issue is already current for this provider.", id: existing.id };
-    }
-
-    if (existing) {
-      const updated: ProviderIssueRecord = {
-        ...existing,
-        status: "Active",
-        updatedAt: nowIso(),
-        resolvedAt: undefined
-      };
-      const nextEntities = {
-        ...entities,
-        providerIssueRecords: {
-          ...entities.providerIssueRecords,
-          [existing.id]: updated
+      updateProviderIssue(id, updates) {
+        const existing = get().providerIssues[id];
+        if (!existing) return;
+        const nextStatus: IssueStatus = updates.status ?? existing.status;
+        const next: ProviderIssue = {
+          ...existing,
+          ...updates,
+          status: nextStatus,
+          updatedAt: nowIso(),
+        };
+        // resolvedAt lifecycle: stamp on transition to Resolved; clear on
+        // transition away from Resolved.
+        if (nextStatus === 'Resolved' && existing.status !== 'Resolved') {
+          next.resolvedAt = next.updatedAt;
+        } else if (nextStatus !== 'Resolved' && existing.status === 'Resolved') {
+          next.resolvedAt = undefined;
         }
-      };
-      set({ entities: saveAndReturn(nextEntities) });
-      return { ok: true, message: "Existing provider issue reopened as active.", id: existing.id };
-    }
+        set((s) => ({ providerIssues: { ...s.providerIssues, [id]: next } }));
+      },
 
-    const createdAt = nowIso();
-    const id = `pir-${providerId}-${slugify(issueLabel.name)}-${createdAt.slice(0, 10)}`;
-    const nextRecord: ProviderIssueRecord = {
-      id,
-      providerId,
-      issueLabelId,
-      status: "Active",
-      notesExamples: "",
-      createdAt,
-      updatedAt: createdAt
-    };
-    const nextEntities = {
-      ...entities,
-      providerIssueRecords: {
-        ...entities.providerIssueRecords,
-        [id]: nextRecord
-      }
-    };
-
-    set({ entities: saveAndReturn(nextEntities) });
-    return { ok: true, message: "Issue assigned to provider.", id };
-  },
-  updateProviderIssueRecord: (providerIssueRecordId, patch) => {
-    const { entities } = get();
-    const record = entities.providerIssueRecords[providerIssueRecordId];
-
-    if (!record) {
-      return { ok: false, message: "Provider issue record not found." };
-    }
-
-    const nextStatus = patch.status ?? record.status;
-    const nextRecord: ProviderIssueRecord = {
-      ...record,
-      ...patch,
-      status: nextStatus,
-      updatedAt: nowIso(),
-      resolvedAt: updateResolvedAt(nextStatus, record)
-    };
-    const nextEntities = {
-      ...entities,
-      providerIssueRecords: {
-        ...entities.providerIssueRecords,
-        [record.id]: nextRecord
-      }
-    };
-
-    set({ entities: saveAndReturn(nextEntities) });
-    return { ok: true, message: "Provider issue updated.", id: record.id };
-  },
-  createIssueLabel: ({ name, description }) => {
-    const trimmedName = name.trim();
-    const trimmedDescription = description.trim();
-
-    if (!trimmedName) {
-      return { ok: false, message: "Issue label name is required." };
-    }
-
-    const { entities } = get();
-    const duplicate = values(entities.issueLabels).find(
-      (issueLabel) => issueLabel.name.trim().toLowerCase() === trimmedName.toLowerCase()
-    );
-
-    if (duplicate) {
-      return { ok: false, message: "An issue label with that name already exists.", id: duplicate.id };
-    }
-
-    const timestamp = nowIso();
-    const baseId = `issue-${slugify(trimmedName)}`;
-    const id = entities.issueLabels[baseId] ? `${baseId}-${Date.now()}` : baseId;
-    const issueLabel: IssueLabel = {
-      id,
-      name: trimmedName,
-      description: trimmedDescription,
-      createdAt: timestamp,
-      updatedAt: timestamp
-    };
-    const nextEntities = {
-      ...entities,
-      issueLabels: {
-        ...entities.issueLabels,
-        [id]: issueLabel
-      }
-    };
-
-    set({ entities: saveAndReturn(nextEntities) });
-    return { ok: true, message: "Issue label created.", id };
-  },
-  editIssueLabelDescription: (issueLabelId, description) => {
-    const { entities } = get();
-    const issueLabel = entities.issueLabels[issueLabelId];
-
-    if (!issueLabel) {
-      return { ok: false, message: "Issue label not found." };
-    }
-
-    const nextEntities = {
-      ...entities,
-      issueLabels: {
-        ...entities.issueLabels,
-        [issueLabelId]: {
-          ...issueLabel,
+      createIssueLabel(name, description) {
+        const id = newId('issueLabel');
+        const now = nowIso();
+        const label: IssueLabel = {
+          id,
+          name: name.trim(),
           description: description.trim(),
-          updatedAt: nowIso()
-        }
-      }
-    };
+          createdAt: now,
+          updatedAt: now,
+        };
+        set((s) => ({ issueLabels: { ...s.issueLabels, [id]: label } }));
+        return label;
+      },
 
-    set({ entities: saveAndReturn(nextEntities) });
-    return { ok: true, message: "Issue label description updated.", id: issueLabelId };
-  },
-  resetDemoData: () => {
-    const entities = resetStoredEntities();
-    set({
-      entities,
-      selectedNode: null,
-      selectedCdiSpecialistId: null,
-      searchQuery: ""
-    });
-  }
-}));
+      updateIssueLabel(id, updates) {
+        const existing = get().issueLabels[id];
+        if (!existing) return;
+        const next: IssueLabel = {
+          ...existing,
+          ...updates,
+          ...(updates.name !== undefined ? { name: updates.name.trim() } : {}),
+          ...(updates.description !== undefined ? { description: updates.description.trim() } : {}),
+          updatedAt: nowIso(),
+        };
+        set((s) => ({ issueLabels: { ...s.issueLabels, [id]: next } }));
+      },
+
+      resetToSeed() {
+        set({ ...initialEntities(), ...initialUi() });
+      },
+    }),
+    {
+      name: STORAGE_KEY,
+      version: STORAGE_VERSION,
+      storage: createJSONStorage(() => localStorage),
+      // On version mismatch or parse error, wipe and start fresh rather than
+      // try to migrate a prototype's state shape.
+      migrate: () => ({ ...initialEntities(), ...initialUi() }),
+      // UI state (selection, search) intentionally persists too so navigation
+      // feels continuous across refreshes. Layout positions persist so the
+      // graph doesn't re-shuffle.
+    },
+  ),
+);

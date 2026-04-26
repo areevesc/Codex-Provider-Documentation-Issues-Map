@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-surface text-ink font-sans antialiased;
+  }
+
+  /* Subtle scrollbars for side panels. */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-line rounded-full;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-surface-panel border border-line rounded-lg;
+  }
+  .panel-header {
+    @apply px-4 py-3 border-b border-line text-sm font-semibold text-ink;
+  }
+  .panel-body {
+    @apply px-4 py-3 text-sm text-ink;
+  }
+}

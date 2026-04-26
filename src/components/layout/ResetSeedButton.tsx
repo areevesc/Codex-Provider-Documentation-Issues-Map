@@ -1,0 +1,62 @@
+import { useState } from 'react';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
+import { RotateCcw, AlertTriangle } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
+import { Button } from '@/components/ui/Button';
+
+/**
+ * Dev-only reset: wipes the persisted prototype state and reloads the seed
+ * dataset. Wrapped in a confirmation dialog because it's destructive.
+ */
+export function ResetSeedButton() {
+  const resetToSeed = useAppStore((s) => s.resetToSeed);
+  const [open, setOpen] = useState(false);
+
+  function handleConfirm() {
+    resetToSeed();
+    setOpen(false);
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 rounded-md border border-dashed border-line bg-surface-panel px-2 py-1 text-[10px] uppercase tracking-wider text-ink-muted transition-colors hover:border-line hover:bg-surface-subtle hover:text-ink"
+        title="Wipe local changes and reload seed data"
+      >
+        <RotateCcw className="h-3 w-3" />
+        Reset seed
+      </button>
+
+      <Dialog open={open} onClose={() => setOpen(false)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-start justify-center p-4 pt-[20vh]">
+          <DialogPanel className="w-full max-w-sm overflow-hidden rounded-lg border border-line bg-surface-raised shadow-2xl">
+            <div className="flex items-start gap-3 border-b border-line px-4 py-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+              <div>
+                <DialogTitle className="text-sm font-semibold text-ink">
+                  Reset to seed data?
+                </DialogTitle>
+                <p className="mt-1 text-xs text-ink-muted">
+                  This will discard every label, assignment, and status change
+                  you've made in this prototype and restore the original sample
+                  dataset.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 bg-surface-panel px-4 py-3">
+              <Button variant="ghost" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={handleConfirm}>
+                Reset
+              </Button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
+    </>
+  );
+}

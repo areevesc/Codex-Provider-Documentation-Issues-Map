@@ -1,6 +1,6 @@
-# Provider Documentation Issues Map
+# CDI Relationship Tracker
 
-Private internal MVP prototype for exploring CDI specialist, clinic, provider, and documentation issue label relationships.
+Private internal prototype for exploring health system, CDI specialist, clinic, provider, and documentation issue label relationships.
 
 ## Setup
 
@@ -15,7 +15,8 @@ Useful scripts:
 
 ```bash
 npm run build
-npm run test
+npm run lint
+npm run preview
 ```
 
 The app uses fake sample data only. Edits are stored in browser local storage so the prototype can be exercised without a backend.

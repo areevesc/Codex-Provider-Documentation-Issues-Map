@@ -1,13 +1,24 @@
 node_modules
 dist
-.vite
-dev-server*.log
-*.tsbuildinfo
-vite.config.js
-vite.config.d.ts
-.env
-.env.local
+dist-ssr
+*.local
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Env
+.env
+.env.local
+.env.*.local
