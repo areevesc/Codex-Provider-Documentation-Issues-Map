@@ -170,17 +170,17 @@ export function HierarchyView() {
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="shrink-0 border-b border-line bg-surface-raised">
-        <div className="flex items-center justify-between px-4 pb-2 pt-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-wide text-ink">
+        <div className="flex flex-col gap-2 px-3 pb-2 pt-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-sm font-semibold tracking-wide text-ink">
               CDI Relationship Tracker
             </span>
             <span className="rounded border border-line bg-surface-panel px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-ink-muted">
               Prototype
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <nav className="flex items-center gap-1">
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
+            <nav className="flex min-w-0 items-center gap-1">
               <NavLink
                 to="/"
                 end
@@ -215,13 +215,13 @@ export function HierarchyView() {
             <ResetSeedButton />
           </div>
         </div>
-        <div className="px-4 pb-3">
+        <div className="px-3 pb-3 sm:px-4">
           <NodeSearch />
         </div>
       </div>
 
       {/* Tree */}
-      <div className="flex-1 overflow-y-auto px-2 py-2">
+      <div className="flex-1 overflow-y-auto px-1.5 py-2 sm:px-2">
         {healthSystems.map((hs) => {
           const isHsExpanded = expandedHealthSystemIds.has(hs.id);
           const isHsSelected = selectedNodeType === 'healthSystem' && selectedRefId === hs.id;
@@ -269,7 +269,7 @@ export function HierarchyView() {
 
               {/* CDI Specialists */}
               {isHsExpanded && (
-                <div className="ml-5 border-l border-line/50 pl-2">
+                <div className="ml-3 border-l border-line/50 pl-1.5 sm:ml-5 sm:pl-2">
                   {specialistsForHs.map((sp) => {
                     const isSpExpanded = expandedSpecialistIds.has(sp.id);
                     const isSpSelected =
@@ -320,7 +320,7 @@ export function HierarchyView() {
 
                         {/* Clinics */}
                         {isSpExpanded && (
-                          <div className="ml-5 border-l border-line/50 pl-2">
+                          <div className="ml-3 border-l border-line/50 pl-1.5 sm:ml-5 sm:pl-2">
                             {clinicsForSp.map((cl) => {
                               const isClExpanded = expandedClinicIds.has(cl.id);
                               const isClSelected =
@@ -371,7 +371,7 @@ export function HierarchyView() {
 
                                   {/* Providers */}
                                   {isClExpanded && (
-                                    <div className="ml-4 border-l border-line/50 pl-2">
+                                    <div className="ml-2 border-l border-line/50 pl-1.5 sm:ml-4 sm:pl-2">
                                       {providersForCl.map((p) => {
                                         const isPSelected =
                                           selectedNodeType === 'provider' && selectedRefId === p.id;

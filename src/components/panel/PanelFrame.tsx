@@ -34,18 +34,18 @@ export function PanelFrame({
   children,
 }: PanelFrameProps) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-line bg-surface-panel px-4 py-2">
-        <div className="flex min-w-0 items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+    <div className="flex min-h-full flex-col lg:h-full">
+      <div className="border-b border-line bg-surface-panel px-3 py-2 sm:px-4">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:flex-nowrap sm:gap-3">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-nowrap">
             <Badge tone={typeTones[type]} className="shrink-0">
               {typeLabels[type]}
             </Badge>
-            <h2 className="min-w-0 flex-1 truncate text-sm font-semibold leading-tight text-ink">
+            <h2 className="min-w-[8rem] flex-1 truncate text-sm font-semibold leading-tight text-ink">
               {title}
             </h2>
             {subtitle && (
-              <div className="max-w-[45%] shrink-0 truncate text-xs text-ink-muted">
+              <div className="w-full truncate text-xs text-ink-muted sm:w-auto sm:max-w-[45%] sm:shrink-0">
                 {subtitle}
               </div>
             )}
@@ -53,7 +53,7 @@ export function PanelFrame({
           {headerActions}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto">{children}</div>
+      <div className="min-h-0 flex-1 overflow-visible lg:overflow-y-auto">{children}</div>
     </div>
   );
 }
@@ -69,13 +69,13 @@ export function PanelSection({
 }) {
   return (
     <section className="border-b border-line last:border-b-0">
-      <header className="flex items-center justify-between px-4 pb-1 pt-3">
+      <header className="flex items-center justify-between gap-3 px-3 pb-1 pt-3 sm:px-4">
         <h3 className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
           {title}
         </h3>
         {rightAdornment}
       </header>
-      <div className="px-4 pb-3 pt-1 text-sm text-ink">{children}</div>
+      <div className="px-3 pb-3 pt-1 text-sm text-ink sm:px-4">{children}</div>
     </section>
   );
 }

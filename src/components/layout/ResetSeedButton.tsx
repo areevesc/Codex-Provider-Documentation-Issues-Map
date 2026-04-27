@@ -22,17 +22,17 @@ export function ResetSeedButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1 rounded-md border border-dashed border-line bg-surface-panel px-2 py-1 text-[10px] uppercase tracking-wider text-ink-muted transition-colors hover:border-line hover:bg-surface-subtle hover:text-ink"
+        className="flex h-7 items-center gap-1 rounded-md border border-dashed border-line bg-surface-panel px-2 text-[10px] uppercase tracking-wider text-ink-muted transition-colors hover:border-line hover:bg-surface-subtle hover:text-ink"
         title="Wipe local changes and reload seed data"
       >
         <RotateCcw className="h-3 w-3" />
-        Reset seed
+        <span className="hidden sm:inline">Reset seed</span>
       </button>
 
       <Dialog open={open} onClose={() => setOpen(false)} className="relative z-50">
         <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-start justify-center p-4 pt-[20vh]">
-          <DialogPanel className="w-full max-w-sm overflow-hidden rounded-lg border border-line bg-surface-raised shadow-2xl">
+        <div className="fixed inset-0 flex items-end justify-center p-0 sm:items-start sm:p-4 sm:pt-[20vh]">
+          <DialogPanel className="max-h-[92vh] w-full max-w-sm overflow-y-auto rounded-t-lg border border-line bg-surface-raised shadow-2xl sm:rounded-lg">
             <div className="flex items-start gap-3 border-b border-line px-4 py-3">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
               <div>

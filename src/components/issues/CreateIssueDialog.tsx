@@ -74,8 +74,8 @@ export function CreateIssueDialog({
   return (
     <Dialog open={open} onClose={handleClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
-      <div className="fixed inset-0 flex items-start justify-center p-4 pt-[10vh]">
-        <DialogPanel className="w-full max-w-lg overflow-hidden rounded-lg border border-line bg-surface-raised shadow-2xl">
+      <div className="fixed inset-0 flex items-end justify-center p-0 sm:items-start sm:p-4 sm:pt-[10vh]">
+        <DialogPanel className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-lg border border-line bg-surface-raised shadow-2xl sm:rounded-lg">
           <div className="flex items-start justify-between border-b border-line px-4 py-3">
             <div>
               <DialogTitle className="text-base font-semibold text-ink">
@@ -121,14 +121,15 @@ export function CreateIssueDialog({
                 onPick={handlePickExisting}
               />
 
-              <div className="flex items-center justify-end gap-2 border-t border-line pt-3">
-                <Button variant="ghost" onClick={handleClose}>
+              <div className="flex flex-col-reverse gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-end">
+                <Button variant="ghost" onClick={handleClose} className="w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button
                   variant="primary"
                   disabled={!canContinueFromName}
                   onClick={() => setStep('describe')}
+                  className="w-full sm:w-auto"
                 >
                   Continue — mine is different
                 </Button>
@@ -160,16 +161,17 @@ export function CreateIssueDialog({
                 />
               </div>
 
-              <div className="flex items-center justify-between border-t border-line pt-3">
+              <div className="flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button
                   variant="ghost"
                   onClick={() => setStep('name')}
                   icon={<ChevronLeft className="h-3.5 w-3.5" />}
+                  className="w-full sm:w-auto"
                 >
                   Back
                 </Button>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" onClick={handleClose}>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+                  <Button variant="ghost" onClick={handleClose} className="w-full sm:w-auto">
                     Cancel
                   </Button>
                   <Button
@@ -177,6 +179,7 @@ export function CreateIssueDialog({
                     disabled={!description.trim()}
                     onClick={handleCreate}
                     icon={<Check className="h-3.5 w-3.5" />}
+                    className="w-full sm:w-auto"
                   >
                     Create label
                   </Button>

@@ -9,7 +9,7 @@ import { EditIssueDialog } from '@/components/issues/EditIssueDialog';
 
 const navCls = ({ isActive }: { isActive: boolean }) =>
   [
-    'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
+    'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
     isActive ? 'bg-surface-panel text-ink' : 'text-ink-muted hover:bg-surface-panel hover:text-ink',
   ].join(' ');
 
@@ -19,10 +19,10 @@ export function IssueLibraryPage() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="border-b border-line bg-surface-raised px-6 py-2">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-wide text-ink">
+      <div className="border-b border-line bg-surface-raised px-3 py-2 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-sm font-semibold tracking-wide text-ink">
               CDI Relationship Tracker
             </span>
             <span className="rounded border border-line bg-surface-panel px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-ink-muted">
@@ -41,35 +41,36 @@ export function IssueLibraryPage() {
           </nav>
         </div>
       </div>
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
-        <div>
-          <h1 className="text-xl font-semibold text-ink">Issue Library</h1>
-          <p className="mt-1 text-sm text-ink-muted">
-            Canonical documentation-issue labels. Create them here — never from a provider
-            panel — to keep the label set clean and reusable.
-          </p>
+      <div className="mx-auto max-w-6xl px-3 py-5 sm:px-6 sm:py-8">
+        <header className="flex flex-col items-stretch gap-4 border-b border-line pb-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-ink">Issue Library</h1>
+            <p className="mt-1 text-sm text-ink-muted">
+              Canonical documentation-issue labels. Create them here — never from a provider
+              panel — to keep the label set clean and reusable.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            onClick={() => setCreateOpen(true)}
+            icon={<Plus className="h-4 w-4" />}
+            className="w-full sm:w-auto"
+          >
+            New label
+          </Button>
+        </header>
+
+        <div className="mt-6">
+          <IssueLibraryTable onEdit={(l) => setEditing(l)} />
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setCreateOpen(true)}
-          icon={<Plus className="h-4 w-4" />}
-        >
-          New label
-        </Button>
-      </header>
 
-      <div className="mt-6">
-        <IssueLibraryTable onEdit={(l) => setEditing(l)} />
+        <CreateIssueDialog open={createOpen} onClose={() => setCreateOpen(false)} />
+        <EditIssueDialog
+          open={editing !== null}
+          label={editing}
+          onClose={() => setEditing(null)}
+        />
       </div>
-
-      <CreateIssueDialog open={createOpen} onClose={() => setCreateOpen(false)} />
-      <EditIssueDialog
-        open={editing !== null}
-        label={editing}
-        onClose={() => setEditing(null)}
-      />
-    </div>
     </div>
   );
 }

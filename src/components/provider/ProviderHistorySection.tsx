@@ -34,7 +34,7 @@ export function ProviderHistorySection({ providerId }: ProviderHistorySectionPro
           className="flex w-full items-center justify-between gap-3 border-b border-line pb-2 text-left transition-colors hover:border-ink-faint/40"
           aria-expanded={open}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             {open ? (
               <ChevronDown className="h-4 w-4 text-ink-muted" />
             ) : (
@@ -42,7 +42,7 @@ export function ProviderHistorySection({ providerId }: ProviderHistorySectionPro
             )}
             <h2 className="text-base font-semibold text-ink">Historical Issues</h2>
           </div>
-          <div className="text-xs text-ink-muted">
+          <div className="shrink-0 text-xs text-ink-muted">
             {resolved} resolved · {archived} archived
           </div>
         </button>

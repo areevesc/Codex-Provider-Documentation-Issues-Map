@@ -78,7 +78,7 @@ export function IssueLibraryTable({ onEdit }: IssueLibraryTableProps) {
 
   return (
     <div>
-      <div className="relative mb-3 max-w-md">
+      <div className="relative mb-3 w-full max-w-md">
         <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
         <Input
           value={search}
@@ -88,7 +88,44 @@ export function IssueLibraryTable({ onEdit }: IssueLibraryTableProps) {
         />
       </div>
 
-      <div className="overflow-hidden rounded-md border border-line">
+      <div className="space-y-2 md:hidden">
+        {rows.length === 0 ? (
+          <div className="rounded-md border border-line bg-surface-raised px-4 py-8 text-center text-sm text-ink-muted">
+            No labels match your search.
+          </div>
+        ) : (
+          rows.map(({ label, providerCount, clinicCount }) => (
+            <div key={label.id} className="rounded-md border border-line bg-surface-raised p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <NodeLink type="label" refId={label.id} className="font-medium">
+                    {label.name}
+                  </NodeLink>
+                  <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-ink-muted">
+                    {label.description}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onEdit(label)}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-md border border-line bg-surface-panel px-2 py-1 text-[11px] text-ink-muted hover:bg-surface-subtle hover:text-ink"
+                  aria-label={`Edit ${label.name}`}
+                >
+                  <Pencil className="h-3 w-3" />
+                  Edit
+                </button>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                <MobileStat label="Providers" value={providerCount} />
+                <MobileStat label="Clinics" value={clinicCount} />
+                <MobileStat label="Updated" value={formatShortDate(label.updatedAt)} />
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-md border border-line md:block">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-line bg-surface-panel text-[11px] uppercase tracking-wider text-ink-muted">
             <tr>
@@ -167,6 +204,17 @@ export function IssueLibraryTable({ onEdit }: IssueLibraryTableProps) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function MobileStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded border border-line bg-surface-panel px-2 py-1.5">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">
+        {label}
+      </div>
+      <div className="mt-0.5 truncate text-ink">{value}</div>
     </div>
   );
 }

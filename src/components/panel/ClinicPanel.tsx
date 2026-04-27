@@ -83,12 +83,16 @@ export function ClinicPanel({ clinicId }: ClinicPanelProps) {
                     )}
                   </div>
                   {issues.length > 0 && (
-                    <ul className="ml-3 mt-0.5 space-y-0.5 border-l border-line/50 pl-2">
+                    <ul className="ml-2 mt-0.5 space-y-0.5 border-l border-line/50 pl-2 sm:ml-3">
                       {issues.map((pi) => {
                         const label = issueLabelsMap[pi.issueLabelId];
                         return (
-                          <li key={pi.id} className="flex items-center gap-1.5">
-                            <NodeLink type="label" refId={pi.issueLabelId} className="text-xs">
+                          <li key={pi.id} className="flex flex-wrap items-center gap-1.5">
+                            <NodeLink
+                              type="label"
+                              refId={pi.issueLabelId}
+                              className="max-w-full text-xs"
+                            >
                               {label?.name ?? 'Unknown label'}
                             </NodeLink>
                             <StatusPill status={pi.status} />

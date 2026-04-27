@@ -124,13 +124,14 @@ export function ProviderIssueForm({ issue }: ProviderIssueFormProps) {
         />
       </div>
 
-      <div className="flex items-center justify-end gap-2 border-t border-line pt-4">
+      <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-end">
         <Button
           type="button"
           variant="ghost"
           onClick={handleRevert}
           disabled={!dirty}
           icon={<RotateCcw className="h-3.5 w-3.5" />}
+          className="w-full sm:w-auto"
         >
           Revert
         </Button>
@@ -139,6 +140,7 @@ export function ProviderIssueForm({ issue }: ProviderIssueFormProps) {
           variant="primary"
           disabled={!dirty}
           icon={<Save className="h-3.5 w-3.5" />}
+          className="w-full sm:w-auto"
         >
           Save changes
         </Button>

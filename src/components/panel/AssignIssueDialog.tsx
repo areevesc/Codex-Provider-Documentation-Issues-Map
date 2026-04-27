@@ -82,8 +82,8 @@ export function AssignIssueDialog({ open, providerId, onClose }: AssignIssueDial
   return (
     <Dialog open={open} onClose={handleClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
-      <div className="fixed inset-0 flex items-start justify-center p-4 pt-[12vh]">
-        <DialogPanel className="w-full max-w-md overflow-hidden rounded-lg border border-line bg-surface-raised shadow-2xl">
+      <div className="fixed inset-0 flex items-end justify-center p-0 sm:items-start sm:p-4 sm:pt-[12vh]">
+        <DialogPanel className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-lg border border-line bg-surface-raised shadow-2xl sm:rounded-lg">
           <div className="flex items-start justify-between border-b border-line px-4 py-3">
             <div>
               <DialogTitle className="text-base font-semibold text-ink">
@@ -201,11 +201,16 @@ export function AssignIssueDialog({ open, providerId, onClose }: AssignIssueDial
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-line bg-surface-panel px-4 py-3">
-            <Button variant="ghost" onClick={handleClose}>
+          <div className="flex flex-col-reverse gap-2 border-t border-line bg-surface-panel px-4 py-3 sm:flex-row sm:items-center sm:justify-end">
+            <Button variant="ghost" onClick={handleClose} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleAssign} disabled={!selected}>
+            <Button
+              variant="primary"
+              onClick={handleAssign}
+              disabled={!selected}
+              className="w-full sm:w-auto"
+            >
               Assign label
             </Button>
           </div>

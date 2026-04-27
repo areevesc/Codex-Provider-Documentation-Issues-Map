@@ -24,7 +24,7 @@ export function ProviderDetailPage() {
 
   if (!provider) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-12">
+        <div className="mx-auto h-full max-w-3xl overflow-y-auto px-3 py-10 sm:px-6 sm:py-12">
         <h1 className="text-xl font-semibold text-ink">Provider not found</h1>
         <p className="mt-2 text-sm text-ink-muted">
           The provider id <code>{providerId}</code> does not exist in the current dataset.
@@ -45,7 +45,7 @@ export function ProviderDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
+    <div className="mx-auto h-full max-w-5xl overflow-y-auto px-3 py-5 sm:px-6 sm:py-8">
       <Link
         to="/"
         className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink"
@@ -55,10 +55,10 @@ export function ProviderDetailPage() {
       </Link>
 
       <header className="mt-3 border-b border-line pb-6">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <Badge tone="green">Provider</Badge>
-            <h1 className="mt-2 text-2xl font-semibold text-ink">{provider.name}</h1>
+            <h1 className="mt-2 text-xl font-semibold text-ink sm:text-2xl">{provider.name}</h1>
             {provider.specialty && (
               <div className="mt-1 text-sm text-ink-muted">{provider.specialty}</div>
             )}
@@ -66,7 +66,7 @@ export function ProviderDetailPage() {
           <Link
             to="/"
             onClick={openInGraph}
-            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-line bg-surface-panel px-3 py-1.5 text-xs text-ink-muted hover:bg-surface-subtle hover:text-ink"
+            className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-line bg-surface-panel px-3 py-1.5 text-xs text-ink-muted hover:bg-surface-subtle hover:text-ink sm:justify-start"
           >
             Open in graph
           </Link>

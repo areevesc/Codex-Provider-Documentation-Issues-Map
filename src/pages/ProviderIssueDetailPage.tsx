@@ -19,7 +19,7 @@ export function ProviderIssueDetailPage() {
 
   if (!provider || !issue || issue.providerId !== provider.id) {
     return (
-      <div className="mx-auto max-w-3xl px-6 py-12">
+      <div className="mx-auto h-full max-w-3xl overflow-y-auto px-3 py-10 sm:px-6 sm:py-12">
         <h1 className="text-xl font-semibold text-ink">Issue not found</h1>
         <p className="mt-2 text-sm text-ink-muted">
           That provider/issue pairing does not exist.
@@ -36,7 +36,7 @@ export function ProviderIssueDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-8">
+    <div className="mx-auto h-full max-w-3xl overflow-y-auto px-3 py-5 sm:px-6 sm:py-8">
       <Link
         to={`/providers/${provider.id}`}
         className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-ink"
@@ -47,7 +47,7 @@ export function ProviderIssueDetailPage() {
 
       <header className="mt-3 border-b border-line pb-5">
         <Badge tone="amber">Provider Issue</Badge>
-        <h1 className="mt-2 text-2xl font-semibold text-ink">
+        <h1 className="mt-2 text-xl font-semibold text-ink sm:text-2xl">
           {label?.name ?? 'Unknown label'}
         </h1>
         <div className="mt-1 text-sm text-ink-muted">

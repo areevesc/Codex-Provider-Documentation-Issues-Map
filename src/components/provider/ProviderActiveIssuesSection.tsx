@@ -28,7 +28,7 @@ export function ProviderActiveIssuesSection({ providerId }: ProviderActiveIssues
   return (
     <>
       <section>
-        <header className="flex items-end justify-between gap-3 border-b border-line pb-2">
+        <header className="flex flex-col items-stretch gap-3 border-b border-line pb-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-ink">Current Issues</h2>
             <p className="text-xs text-ink-muted">
@@ -40,6 +40,7 @@ export function ProviderActiveIssuesSection({ providerId }: ProviderActiveIssues
             variant="primary"
             icon={<Plus className="h-3.5 w-3.5" />}
             onClick={() => setAssignOpen(true)}
+            className="w-full sm:w-auto"
           >
             Assign existing label
           </Button>

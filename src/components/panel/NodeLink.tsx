@@ -29,7 +29,7 @@ export function NodeLink({ type, refId, children, className = '' }: NodeLinkProp
       type="button"
       onClick={() => setSelection(graphId, type)}
       className={[
-        'inline-flex items-center gap-1 rounded px-1 py-0.5 text-left text-sm text-ink transition-colors hover:bg-surface-subtle hover:text-ink',
+        'inline-flex min-w-0 max-w-full items-center gap-1 rounded px-1 py-0.5 text-left text-sm text-ink transition-colors hover:bg-surface-subtle hover:text-ink',
         className,
       ].join(' ')}
     >
