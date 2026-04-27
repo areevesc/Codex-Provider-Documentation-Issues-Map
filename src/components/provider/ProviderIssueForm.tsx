@@ -103,7 +103,7 @@ export function ProviderIssueForm({ issue }: ProviderIssueFormProps) {
         <FieldLabel htmlFor="notes">
           Notes
           <span className="ml-1 font-normal text-ink-faint">
-            (context, pasted excerpts, what the clinician needs)
+            (fake context and follow-up details only)
           </span>
         </FieldLabel>
         <Textarea
@@ -111,7 +111,7 @@ export function ProviderIssueForm({ issue }: ProviderIssueFormProps) {
           rows={10}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="e.g. Note 3/12 — Diabetes listed under Assessment but not documented in this visit's plan. Needs linkage + specificity."
+          placeholder="Use fabricated examples only. Do not enter real patient, provider, or clinical documentation data."
         />
       </div>
 

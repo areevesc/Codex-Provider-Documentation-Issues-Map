@@ -19,4 +19,4 @@ npm run lint
 npm run preview
 ```
 
-The app uses fake sample data only. Edits are stored in browser local storage so the prototype can be exercised without a backend.
+The app uses fake sample data only. Edits are stored in browser local storage so the prototype can be exercised without a backend. Do not enter real patient, provider, or clinical documentation data into the GitHub Pages deployment.

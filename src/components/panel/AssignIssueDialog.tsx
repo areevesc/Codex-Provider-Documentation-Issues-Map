@@ -183,7 +183,7 @@ export function AssignIssueDialog({ open, providerId, onClose }: AssignIssueDial
                 rows={4}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Context, the documentation snippet, or what the clinician needs to know."
+                placeholder="Use fabricated context only. Do not enter real patient, provider, or clinical documentation data."
               />
             </div>
 

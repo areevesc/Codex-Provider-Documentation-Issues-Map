@@ -73,7 +73,7 @@ export interface ProviderIssue {
   providerId: string;
   issueLabelId: string;
   status: IssueStatus;
-  /** Single combined free-text field: notes, examples, pasted excerpts. */
+  /** Single combined free-text field for prototype notes and fabricated examples. */
   notes: string;
   /** ISO-8601 timestamp. */
   createdAt: string;
