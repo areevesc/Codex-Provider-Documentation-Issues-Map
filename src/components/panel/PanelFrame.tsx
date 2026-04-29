@@ -41,16 +41,16 @@ export function PanelFrame({
             <Badge tone={typeTones[type]} className="shrink-0">
               {typeLabels[type]}
             </Badge>
-            <h2 className="min-w-[8rem] flex-1 truncate text-sm font-semibold leading-tight text-ink">
+            <h2 className="min-w-[7rem] flex-1 truncate text-sm font-semibold leading-tight text-ink">
               {title}
             </h2>
             {subtitle && (
-              <div className="w-full truncate text-xs text-ink-muted sm:w-auto sm:max-w-[45%] sm:shrink-0">
+              <div className="min-w-0 max-w-full truncate text-xs text-ink-muted sm:max-w-[8rem] sm:shrink">
                 {subtitle}
               </div>
             )}
           </div>
-          {headerActions}
+          {headerActions && <div className="shrink-0">{headerActions}</div>}
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-visible lg:overflow-y-auto">{children}</div>
