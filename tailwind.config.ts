@@ -20,15 +20,14 @@ export default {
         },
         accent: {
           specialist: '#a78bfa', // purple
-          clinic: '#60a5fa',     // blue
-          provider: '#34d399',   // green
-          label: '#fbbf24',      // amber
+          clinic: '#60a5fa', // blue
+          provider: '#34d399', // green
+          label: '#fbbf24', // amber
         },
         status: {
           active: '#f87171',
           improving: '#fbbf24',
           resolved: '#34d399',
-          archived: '#6b7280',
         },
       },
       fontFamily: {

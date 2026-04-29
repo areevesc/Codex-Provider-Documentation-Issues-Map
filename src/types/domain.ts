@@ -9,27 +9,22 @@
  * ProviderIssue, never on IssueLabel.
  */
 
-export type IssueStatus = 'Active' | 'Improving' | 'Resolved' | 'Archived';
+export type IssueStatus = 'Active' | 'Improving' | 'Resolved';
 
-export const ISSUE_STATUSES: readonly IssueStatus[] = [
-  'Active',
-  'Improving',
-  'Resolved',
-  'Archived',
-] as const;
+export const ISSUE_STATUSES: readonly IssueStatus[] = ['Active', 'Improving', 'Resolved'] as const;
 
 /** "Current / active" on home screen = Active + Improving (per confirmed spec interpretation). */
 export const CURRENT_STATUSES: readonly IssueStatus[] = ['Active', 'Improving'] as const;
 
-/** Historical = Resolved + Archived. Shown only on provider detail page. */
-export const HISTORICAL_STATUSES: readonly IssueStatus[] = ['Resolved', 'Archived'] as const;
+/** Historical = Resolved. Shown on provider detail page. */
+export const HISTORICAL_STATUSES: readonly IssueStatus[] = ['Resolved'] as const;
 
 export function isCurrentStatus(status: IssueStatus): boolean {
   return status === 'Active' || status === 'Improving';
 }
 
 export function isHistoricalStatus(status: IssueStatus): boolean {
-  return status === 'Resolved' || status === 'Archived';
+  return status === 'Resolved';
 }
 
 export interface HealthSystem {

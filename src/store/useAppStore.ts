@@ -15,7 +15,7 @@ import { newId, graphNodeId } from '@/lib/ids';
 import { nowIso } from '@/lib/dates';
 
 const STORAGE_KEY = 'cdi-prototype';
-const STORAGE_VERSION = 2;
+const STORAGE_VERSION = 3;
 
 type ById<T> = Record<string, T>;
 
@@ -70,6 +70,7 @@ export interface AppState extends EntitiesSlice, UiSlice {
     id: string,
     updates: Partial<Pick<ProviderIssue, 'status' | 'notes' | 'attachments'>>,
   ): void;
+  deleteProviderIssue(id: string): void;
 
   // mutations — issue labels
   createIssueLabel(name: string, description: string): IssueLabel;
@@ -97,7 +98,13 @@ function initialUi(): UiSlice {
     selectedNodeType: null,
     specialistFilterId: null,
     searchQuery: '',
-    visibleNodeTypes: { healthSystem: true, specialist: true, clinic: true, provider: true, label: true },
+    visibleNodeTypes: {
+      healthSystem: true,
+      specialist: true,
+      clinic: true,
+      provider: true,
+      label: true,
+    },
     graphLayoutPositions: {},
     labelScopeProviderIds: null,
   };
@@ -174,6 +181,14 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ providerIssues: { ...s.providerIssues, [id]: next } }));
       },
 
+      deleteProviderIssue(id) {
+        set((s) => {
+          const providerIssues = { ...s.providerIssues };
+          delete providerIssues[id];
+          return { providerIssues };
+        });
+      },
+
       createIssueLabel(name, description) {
         const id = newId('issueLabel');
         const now = nowIso();
@@ -209,12 +224,29 @@ export const useAppStore = create<AppState>()(
       name: STORAGE_KEY,
       version: STORAGE_VERSION,
       storage: createJSONStorage(() => localStorage),
-      // On version mismatch or parse error, wipe and start fresh rather than
-      // try to migrate a prototype's state shape.
-      migrate: () => ({ ...initialEntities(), ...initialUi() }),
+      migrate: migratePersistedState,
       // UI state (selection, search) intentionally persists too so navigation
       // feels continuous across refreshes. Layout positions persist so the
       // graph doesn't re-shuffle.
     },
   ),
 );
+
+function migratePersistedState(persistedState: unknown): EntitiesSlice & UiSlice {
+  const baseline = { ...initialEntities(), ...initialUi() };
+  if (!persistedState || typeof persistedState !== 'object') return baseline;
+
+  const state = persistedState as Partial<EntitiesSlice & UiSlice>;
+  const providerIssues: ById<ProviderIssue> = {};
+  for (const [id, issue] of Object.entries(state.providerIssues ?? baseline.providerIssues)) {
+    if (!issue || typeof issue !== 'object') continue;
+    if ((issue as { status?: string }).status === 'Archived') continue;
+    providerIssues[id] = issue;
+  }
+
+  return {
+    ...baseline,
+    ...state,
+    providerIssues,
+  };
+}

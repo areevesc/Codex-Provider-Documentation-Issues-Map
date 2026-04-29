@@ -12,14 +12,13 @@ interface ProviderIssueRowProps {
 
 export function ProviderIssueRow({ issue, variant = 'active' }: ProviderIssueRowProps) {
   const label = useAppStore((s) => s.issueLabels[issue.issueLabelId]);
-  const archivedDim = variant === 'historical' && issue.status === 'Archived';
 
   return (
     <Link
       to={`/providers/${issue.providerId}/issues/${issue.id}`}
       className={[
         'group flex items-start justify-between gap-3 rounded-md border border-line bg-surface-panel px-4 py-3 transition-colors hover:border-ink-faint/40 hover:bg-surface-subtle',
-        archivedDim ? 'opacity-60 hover:opacity-100' : '',
+        variant === 'historical' ? 'bg-surface-panel/80' : '',
       ].join(' ')}
     >
       <div className="min-w-0 flex-1">

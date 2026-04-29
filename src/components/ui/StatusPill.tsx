@@ -9,7 +9,6 @@ const statusClasses: Record<IssueStatus, string> = {
   Active: 'bg-status-active/15 text-status-active border-status-active/30',
   Improving: 'bg-status-improving/15 text-status-improving border-status-improving/30',
   Resolved: 'bg-status-resolved/15 text-status-resolved border-status-resolved/30',
-  Archived: 'bg-status-archived/15 text-status-archived border-status-archived/30',
 };
 
 export function StatusPill({ status, className = '' }: StatusPillProps) {
