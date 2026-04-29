@@ -34,6 +34,11 @@ export function ProviderIssueRow({ issue, variant = 'active' }: ProviderIssueRow
         ) : (
           <p className="mt-1 text-xs italic text-ink-faint">No notes yet.</p>
         )}
+        {issue.attachments && issue.attachments.length > 0 && (
+          <div className="mt-1 text-[11px] text-ink-faint">
+            {issue.attachments.length} image{issue.attachments.length === 1 ? '' : 's'} attached
+          </div>
+        )}
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-ink-faint">
           <span>Opened {formatDate(issue.createdAt)}</span>
           <span>Updated {formatDate(issue.updatedAt)}</span>

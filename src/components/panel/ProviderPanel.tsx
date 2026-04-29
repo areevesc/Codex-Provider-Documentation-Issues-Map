@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ExternalLink } from 'lucide-react';
+import { Plus, ExternalLink, StickyNote } from 'lucide-react';
 import { useShallow } from 'zustand/shallow';
 import { useAppStore } from '@/store/useAppStore';
 import {
@@ -52,10 +52,10 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
         headerActions={
           <Link
             to={`/providers/${provider.id}`}
-            className="inline-flex items-center gap-1 rounded-md border border-line bg-surface-panel px-2.5 py-1 text-xs text-ink-muted transition-colors hover:bg-surface-subtle hover:text-ink"
-            title="Open full provider detail"
+            className="inline-flex items-center gap-1.5 rounded-md border border-accent-provider/35 bg-accent-provider/10 px-2.5 py-1 text-xs font-medium text-accent-provider transition-colors hover:bg-accent-provider/20 hover:text-ink"
+            title="Open provider profile with current and historical issues"
           >
-            Detail
+            Provider profile
             <ExternalLink className="h-3 w-3" />
           </Link>
         }
@@ -102,7 +102,7 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
               {sortedIssues.map((pi) => {
                 const label = labels[pi.issueLabelId];
                 return (
-                  <li key={pi.id} className="flex items-start justify-between gap-3 px-3 py-2">
+                  <li key={pi.id} className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <NodeLink
@@ -117,13 +117,19 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
                       {pi.notes && (
                         <p className="mt-1 line-clamp-2 text-xs text-ink-muted">{pi.notes}</p>
                       )}
+                      {pi.attachments && pi.attachments.length > 0 && (
+                        <p className="mt-1 text-[11px] text-ink-faint">
+                          {pi.attachments.length} image{pi.attachments.length === 1 ? '' : 's'} attached
+                        </p>
+                      )}
                     </div>
                     <Link
                       to={`/providers/${provider.id}/issues/${pi.id}`}
-                      className="shrink-0 rounded px-1.5 py-0.5 text-[11px] text-ink-muted hover:bg-surface-subtle hover:text-ink"
-                      title="Open issue detail"
+                      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-accent-specialist/40 bg-accent-specialist/15 px-2.5 py-1.5 text-xs font-medium text-accent-specialist transition-colors hover:bg-accent-specialist/25 hover:text-ink"
+                      title="Edit notes and attached images"
                     >
-                      Open
+                      <StickyNote className="h-3.5 w-3.5" />
+                      Notes & images
                     </Link>
                   </li>
                 );

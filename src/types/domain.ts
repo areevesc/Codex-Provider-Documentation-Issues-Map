@@ -68,6 +68,15 @@ export interface IssueLabel {
   updatedAt: string;
 }
 
+export interface ProviderIssueAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+  createdAt: string;
+}
+
 export interface ProviderIssue {
   id: string;
   providerId: string;
@@ -75,6 +84,7 @@ export interface ProviderIssue {
   status: IssueStatus;
   /** Single combined free-text field for prototype notes and fabricated examples. */
   notes: string;
+  attachments?: ProviderIssueAttachment[];
   /** ISO-8601 timestamp. */
   createdAt: string;
   /** ISO-8601 timestamp. */

@@ -68,7 +68,7 @@ export interface AppState extends EntitiesSlice, UiSlice {
   ): ProviderIssue;
   updateProviderIssue(
     id: string,
-    updates: Partial<Pick<ProviderIssue, 'status' | 'notes'>>,
+    updates: Partial<Pick<ProviderIssue, 'status' | 'notes' | 'attachments'>>,
   ): void;
 
   // mutations — issue labels
