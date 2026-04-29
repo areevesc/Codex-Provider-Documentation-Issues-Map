@@ -7,6 +7,7 @@ import type {
   IssueLabel,
   Provider,
   ProviderIssue,
+  ProviderIssueAttachment,
   IssueStatus,
 } from '@/types/domain';
 import type { NodeType } from '@/types/graph';
@@ -65,6 +66,7 @@ export interface AppState extends EntitiesSlice, UiSlice {
     providerId: string,
     issueLabelId: string,
     initialNotes?: string,
+    initialAttachments?: ProviderIssueAttachment[],
   ): ProviderIssue;
   updateProviderIssue(
     id: string,
@@ -143,7 +145,7 @@ export const useAppStore = create<AppState>()(
         set({ graphLayoutPositions: positions });
       },
 
-      assignIssueToProvider(providerId, issueLabelId, initialNotes = '') {
+      assignIssueToProvider(providerId, issueLabelId, initialNotes = '', initialAttachments = []) {
         const id = newId('providerIssue');
         const now = nowIso();
         const record: ProviderIssue = {
@@ -152,6 +154,7 @@ export const useAppStore = create<AppState>()(
           issueLabelId,
           status: 'Active',
           notes: initialNotes,
+          ...(initialAttachments.length > 0 ? { attachments: initialAttachments } : {}),
           createdAt: now,
           updatedAt: now,
         };

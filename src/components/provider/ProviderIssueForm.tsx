@@ -2,7 +2,6 @@ import { useEffect, useState, type ClipboardEvent, type DragEvent } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useNavigate } from 'react-router-dom';
 import { ImagePlus, RotateCcw, Save, Trash2, X } from 'lucide-react';
-import { nanoid } from 'nanoid';
 import type { IssueStatus, ProviderIssue, ProviderIssueAttachment } from '@/types/domain';
 import { ISSUE_STATUSES } from '@/types/domain';
 import { useAppStore } from '@/store/useAppStore';
@@ -10,13 +9,17 @@ import { Button } from '@/components/ui/Button';
 import { Textarea, FieldLabel } from '@/components/ui/Input';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { formatDateTime } from '@/lib/dates';
+import {
+  fileToAttachment,
+  formatBytes,
+  MAX_ATTACHMENT_BYTES,
+  MAX_ATTACHMENTS,
+  sameAttachments,
+} from '@/lib/attachments';
 
 interface ProviderIssueFormProps {
   issue: ProviderIssue;
 }
-
-const MAX_ATTACHMENTS = 6;
-const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 export function ProviderIssueForm({ issue }: ProviderIssueFormProps) {
   const navigate = useNavigate();
@@ -72,7 +75,7 @@ export function ProviderIssueForm({ issue }: ProviderIssueFormProps) {
     const accepted = incoming.slice(0, remainingSlots);
     const tooLarge = accepted.find((file) => file.size > MAX_ATTACHMENT_BYTES);
     if (tooLarge) {
-      setAttachmentError(`${tooLarge.name} is too large. Keep each image under 2 MB.`);
+      setAttachmentError(`${tooLarge.name} is too large. Keep each image under 5 MB.`);
       return;
     }
 
@@ -344,48 +347,6 @@ export function ProviderIssueForm({ issue }: ProviderIssueFormProps) {
       </Dialog>
     </>
   );
-}
-
-function fileToAttachment(file: File): Promise<ProviderIssueAttachment> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error);
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') {
-        reject(new Error('Unexpected file reader result'));
-        return;
-      }
-      resolve({
-        id: `att-${nanoid(10)}`,
-        name: file.name || 'Pasted image',
-        type: file.type,
-        size: file.size,
-        dataUrl: reader.result,
-        createdAt: new Date().toISOString(),
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function sameAttachments(a: ProviderIssueAttachment[], b: ProviderIssueAttachment[]): boolean {
-  if (a.length !== b.length) return false;
-  return a.every((item, index) => {
-    const other = b[index];
-    return (
-      item.id === other.id &&
-      item.name === other.name &&
-      item.type === other.type &&
-      item.size === other.size &&
-      item.dataUrl === other.dataUrl
-    );
-  });
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function Meta({ label, value }: { label: string; value: string }) {
