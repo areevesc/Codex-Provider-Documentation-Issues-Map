@@ -1,5 +1,4 @@
 import { NodeSearch } from './NodeSearch';
-import { ResetSeedButton } from '@/components/layout/ResetSeedButton';
 
 export function LeftSidebar() {
   return (
@@ -13,9 +12,6 @@ export function LeftSidebar() {
         </p>
       </div>
       <NodeSearch />
-      <div className="mt-auto">
-        <ResetSeedButton />
-      </div>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { NavLink } from 'react-router-dom';
-import { ChevronRight, Network, Library, Plus } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { parseGraphNodeId, graphNodeId } from '@/lib/ids';
 import {
@@ -11,9 +10,9 @@ import {
 import { isCurrentStatus } from '@/types/domain';
 import type { LabelCount } from '@/lib/counts';
 import { NodeSearch } from '@/components/sidebar/NodeSearch';
-import { ResetSeedButton } from '@/components/layout/ResetSeedButton';
 import { OrgEntityDialog } from '@/components/org/OrgEntityDialog';
 import type { OrgEntityType } from '@/lib/orgDeletion';
+import { TopNav } from '@/components/layout/TopNav';
 
 export function HierarchyView() {
   const setSelection = useAppStore((s) => s.setSelection);
@@ -188,37 +187,7 @@ export function HierarchyView() {
             </span>
           </div>
           <div className="flex items-center justify-between gap-2 sm:justify-end">
-            <nav className="flex min-w-0 items-center gap-1">
-              <NavLink
-                to="/"
-                end
-                className={({ isActive }) =>
-                  [
-                    'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
-                    isActive
-                      ? 'bg-surface-panel text-ink'
-                      : 'text-ink-muted hover:bg-surface-panel hover:text-ink',
-                  ].join(' ')
-                }
-              >
-                <Network size={14} />
-                Graph
-              </NavLink>
-              <NavLink
-                to="/issues"
-                className={({ isActive }) =>
-                  [
-                    'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
-                    isActive
-                      ? 'bg-surface-panel text-ink'
-                      : 'text-ink-muted hover:bg-surface-panel hover:text-ink',
-                  ].join(' ')
-                }
-              >
-                <Library size={14} />
-                Issue Library
-              </NavLink>
-            </nav>
+            <TopNav />
             <div className="h-5 w-px bg-line" aria-hidden="true" />
             <button
               type="button"
@@ -228,7 +197,6 @@ export function HierarchyView() {
               <Plus size={14} />
               Health system
             </button>
-            <ResetSeedButton />
           </div>
         </div>
         <div className="px-3 pb-3 sm:px-4">

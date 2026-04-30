@@ -1,4 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { Link, type LinkProps } from 'react-router-dom';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md';
@@ -7,6 +8,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
   icon?: ReactNode;
+}
+
+interface LinkButtonProps extends Omit<LinkProps, 'className'> {
+  variant?: Variant;
+  size?: Size;
+  icon?: ReactNode;
+  className?: string;
 }
 
 const variantClasses: Record<Variant, string> = {
@@ -44,3 +52,27 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </button>
   );
 });
+
+export function ButtonLink({
+  variant = 'secondary',
+  size = 'md',
+  icon,
+  className = '',
+  children,
+  ...rest
+}: LinkButtonProps) {
+  return (
+    <Link
+      className={[
+        'inline-flex items-center justify-center rounded-md font-medium transition-colors',
+        variantClasses[variant],
+        sizeClasses[size],
+        className,
+      ].join(' ')}
+      {...rest}
+    >
+      {icon}
+      {children}
+    </Link>
+  );
+}

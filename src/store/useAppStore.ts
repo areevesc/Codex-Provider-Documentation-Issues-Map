@@ -46,6 +46,8 @@ interface UiSlice {
    *  provider IDs in scope so the right panel can show a scoped view. Null
    *  means global (e.g. selected from search or Issue Library). */
   labelScopeProviderIds: string[] | null;
+  appearanceMode: 'dark' | 'light';
+  colorTheme: 'classic' | 'clinical' | 'rose';
 }
 
 export interface AppState extends EntitiesSlice, UiSlice {
@@ -60,6 +62,8 @@ export interface AppState extends EntitiesSlice, UiSlice {
   setSearchQuery(q: string): void;
   setVisibleNodeTypes(updates: Partial<Record<NodeType, boolean>>): void;
   saveLayoutPositions(positions: Record<string, { x: number; y: number }>): void;
+  setAppearanceMode(mode: UiSlice['appearanceMode']): void;
+  setColorTheme(theme: UiSlice['colorTheme']): void;
 
   // mutations — organization structure
   createHealthSystem(name: string): HealthSystem;
@@ -123,6 +127,8 @@ function initialUi(): UiSlice {
     },
     graphLayoutPositions: {},
     labelScopeProviderIds: null,
+    appearanceMode: 'dark',
+    colorTheme: 'classic',
   };
 }
 
@@ -157,6 +163,12 @@ export const useAppStore = create<AppState>()(
       },
       saveLayoutPositions(positions) {
         set({ graphLayoutPositions: positions });
+      },
+      setAppearanceMode(mode) {
+        set({ appearanceMode: mode });
+      },
+      setColorTheme(theme) {
+        set({ colorTheme: theme });
       },
 
       createHealthSystem(name) {
