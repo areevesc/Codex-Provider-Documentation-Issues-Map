@@ -84,8 +84,6 @@ export function confirmOrgDelete(name: string, impact: OrgDeleteImpact) {
     impact.specialists + impact.clinics + impact.providers + impact.providerIssues;
   const base = `Delete ${name}?`;
 
-  if (totalImpacted === 0) return window.confirm(`${base} This cannot be undone.`);
-
   const details = [
     impact.specialists
       ? `${impact.specialists} CDI specialist${impact.specialists === 1 ? '' : 's'}`
@@ -99,9 +97,9 @@ export function confirmOrgDelete(name: string, impact: OrgDeleteImpact) {
     .filter(Boolean)
     .join(', ');
 
-  const response = window.prompt(
-    `${base}\n\nThis will also delete ${details}.\n\nType DELETE to confirm.`,
-  );
+  const impactText =
+    totalImpacted > 0 ? `This will also delete ${details}.` : 'This cannot be undone.';
+  const response = window.prompt(`${base}\n\n${impactText}\n\nType DELETE to confirm.`);
   return response === 'DELETE';
 }
 
