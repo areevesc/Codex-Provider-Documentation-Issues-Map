@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ChevronRight, Network, Library } from 'lucide-react';
+import { ChevronRight, Network, Library, Plus } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { parseGraphNodeId, graphNodeId } from '@/lib/ids';
 import {
@@ -12,6 +12,8 @@ import { isCurrentStatus } from '@/types/domain';
 import type { LabelCount } from '@/lib/counts';
 import { NodeSearch } from '@/components/sidebar/NodeSearch';
 import { ResetSeedButton } from '@/components/layout/ResetSeedButton';
+import { OrgEntityDialog } from '@/components/org/OrgEntityDialog';
+import type { OrgEntityType } from '@/lib/orgDeletion';
 
 export function HierarchyView() {
   const setSelection = useAppStore((s) => s.setSelection);
@@ -26,6 +28,7 @@ export function HierarchyView() {
   const [expandedHealthSystemIds, setExpandedHealthSystemIds] = useState<Set<string>>(new Set());
   const [expandedSpecialistIds, setExpandedSpecialistIds] = useState<Set<string>>(new Set());
   const [expandedClinicIds, setExpandedClinicIds] = useState<Set<string>>(new Set());
+  const [addHealthSystemOpen, setAddHealthSystemOpen] = useState(false);
 
   const healthSystems = useMemo(
     () => Object.values(healthSystemsMap).sort((a, b) => a.name.localeCompare(b.name)),
@@ -54,8 +57,7 @@ export function HierarchyView() {
   const clinicIssueCounts = useMemo(() => {
     const s = useAppStore.getState();
     const out: Record<string, LabelCount[]> = {};
-    for (const cl of Object.values(clinicsMap))
-      out[cl.id] = activeIssueCountsForClinic(s, cl.id);
+    for (const cl of Object.values(clinicsMap)) out[cl.id] = activeIssueCountsForClinic(s, cl.id);
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clinicsMap, providersMap, providerIssuesMap]);
@@ -164,6 +166,12 @@ export function HierarchyView() {
     setSelection(graphNodeId.provider(id), 'provider');
   }
 
+  function handleOrgSaved(entityType: OrgEntityType, id: string) {
+    if (entityType !== 'healthSystem') return;
+    setExpandedHealthSystemIds((prev) => new Set([...prev, id]));
+    setSelection(graphNodeId.healthSystem(id), 'healthSystem');
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -212,6 +220,14 @@ export function HierarchyView() {
               </NavLink>
             </nav>
             <div className="h-5 w-px bg-line" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={() => setAddHealthSystemOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface-panel px-2.5 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:bg-surface-subtle hover:text-ink"
+            >
+              <Plus size={14} />
+              Health system
+            </button>
             <ResetSeedButton />
           </div>
         </div>
@@ -429,6 +445,13 @@ export function HierarchyView() {
         })}
       </div>
 
+      <OrgEntityDialog
+        open={addHealthSystemOpen}
+        mode="create"
+        entityType="healthSystem"
+        onClose={() => setAddHealthSystemOpen(false)}
+        onSaved={handleOrgSaved}
+      />
     </div>
   );
 }

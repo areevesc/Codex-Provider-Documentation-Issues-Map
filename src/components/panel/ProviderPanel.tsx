@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, ExternalLink, StickyNote } from 'lucide-react';
+import { Plus, ExternalLink, StickyNote, Pencil, Trash2 } from 'lucide-react';
 import { useShallow } from 'zustand/shallow';
 import { useAppStore } from '@/store/useAppStore';
 import {
@@ -8,11 +8,15 @@ import {
   getSpecialistForProvider,
   getCurrentProviderIssuesForProvider,
 } from '@/store/selectors';
+import { graphNodeId } from '@/lib/ids';
+import { confirmOrgDelete, getOrgDeleteImpact } from '@/lib/orgDeletion';
 import { Button } from '@/components/ui/Button';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { PanelFrame, PanelSection } from './PanelFrame';
 import { NodeLink } from './NodeLink';
 import { AssignIssueDialog } from './AssignIssueDialog';
+import { OrgEntityDialog } from '@/components/org/OrgEntityDialog';
+import type { OrgEntityType } from '@/lib/orgDeletion';
 
 interface ProviderPanelProps {
   providerId: string;
@@ -24,10 +28,15 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
   const clinic = useAppStore((s) => getClinicForProvider(s, providerId));
   const specialist = useAppStore((s) => getSpecialistForProvider(s, providerId));
   // Array result — wrap with useShallow.
-  const currentIssues = useAppStore(useShallow((s) => getCurrentProviderIssuesForProvider(s, providerId)));
+  const currentIssues = useAppStore(
+    useShallow((s) => getCurrentProviderIssuesForProvider(s, providerId)),
+  );
   const labels = useAppStore((s) => s.issueLabels);
+  const setSelection = useAppStore((s) => s.setSelection);
+  const deleteProvider = useAppStore((s) => s.deleteProvider);
 
   const [assignOpen, setAssignOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const sortedIssues = useMemo(
     () =>
@@ -43,6 +52,19 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
     return <div className="p-4 text-sm text-ink-muted">Provider not found.</div>;
   }
 
+  function handleDelete() {
+    if (!provider) return;
+    const impact = getOrgDeleteImpact(useAppStore.getState(), 'provider', provider.id);
+    if (!confirmOrgDelete(provider.name, impact)) return;
+    const parentId = provider.clinicId;
+    deleteProvider(provider.id);
+    setSelection(graphNodeId.clinic(parentId), 'clinic');
+  }
+
+  function handleOrgSaved(entityType: OrgEntityType, id: string) {
+    if (entityType === 'provider') setSelection(graphNodeId.provider(id), 'provider');
+  }
+
   return (
     <>
       <PanelFrame
@@ -50,14 +72,32 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
         title={provider.name}
         subtitle={provider.specialty}
         headerActions={
-          <Link
-            to={`/providers/${provider.id}`}
-            className="inline-flex items-center gap-1.5 rounded-md border border-accent-provider/35 bg-accent-provider/10 px-2.5 py-1 text-xs font-medium text-accent-provider transition-colors hover:bg-accent-provider/20 hover:text-ink"
-            title="Open provider profile with current and historical issues"
-          >
-            Provider profile
-            <ExternalLink className="h-3 w-3" />
-          </Link>
+          <div className="flex flex-wrap justify-end gap-1">
+            <Link
+              to={`/providers/${provider.id}`}
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border border-accent-provider/35 bg-accent-provider/10 px-2.5 text-xs font-medium text-accent-provider transition-colors hover:bg-accent-provider/20 hover:text-ink"
+              title="Open provider profile with current and historical issues"
+            >
+              Profile
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setEditOpen(true)}
+              icon={<Pencil className="h-3.5 w-3.5" />}
+            >
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={handleDelete}
+              icon={<Trash2 className="h-3.5 w-3.5" />}
+            >
+              Delete
+            </Button>
+          </div>
         }
       >
         <PanelSection title="Clinic">
@@ -102,7 +142,10 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
               {sortedIssues.map((pi) => {
                 const label = labels[pi.issueLabelId];
                 return (
-                  <li key={pi.id} className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                  <li
+                    key={pi.id}
+                    className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3"
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <NodeLink
@@ -119,7 +162,8 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
                       )}
                       {pi.attachments && pi.attachments.length > 0 && (
                         <p className="mt-1 text-[11px] text-ink-faint">
-                          {pi.attachments.length} image{pi.attachments.length === 1 ? '' : 's'} attached
+                          {pi.attachments.length} image{pi.attachments.length === 1 ? '' : 's'}{' '}
+                          attached
                         </p>
                       )}
                     </div>
@@ -143,6 +187,14 @@ export function ProviderPanel({ providerId }: ProviderPanelProps) {
         open={assignOpen}
         providerId={provider.id}
         onClose={() => setAssignOpen(false)}
+      />
+      <OrgEntityDialog
+        open={editOpen}
+        mode="edit"
+        entityType="provider"
+        entityId={provider.id}
+        onClose={() => setEditOpen(false)}
+        onSaved={handleOrgSaved}
       />
     </>
   );

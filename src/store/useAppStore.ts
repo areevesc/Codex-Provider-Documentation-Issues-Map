@@ -61,6 +61,20 @@ export interface AppState extends EntitiesSlice, UiSlice {
   setVisibleNodeTypes(updates: Partial<Record<NodeType, boolean>>): void;
   saveLayoutPositions(positions: Record<string, { x: number; y: number }>): void;
 
+  // mutations — organization structure
+  createHealthSystem(name: string): HealthSystem;
+  updateHealthSystem(id: string, updates: Pick<HealthSystem, 'name'>): void;
+  deleteHealthSystem(id: string): void;
+  createSpecialist(name: string, healthSystemId: string): CDISpecialist;
+  updateSpecialist(id: string, updates: Pick<CDISpecialist, 'name'>): void;
+  deleteSpecialist(id: string): void;
+  createClinic(name: string, cdiSpecialistId: string): Clinic;
+  updateClinic(id: string, updates: Pick<Clinic, 'name'>): void;
+  deleteClinic(id: string): void;
+  createProvider(name: string, clinicId: string, specialty?: string): Provider;
+  updateProvider(id: string, updates: Pick<Provider, 'name' | 'specialty'>): void;
+  deleteProvider(id: string): void;
+
   // mutations — provider issues
   assignIssueToProvider(
     providerId: string,
@@ -143,6 +157,159 @@ export const useAppStore = create<AppState>()(
       },
       saveLayoutPositions(positions) {
         set({ graphLayoutPositions: positions });
+      },
+
+      createHealthSystem(name) {
+        const id = newId('healthSystem');
+        const record: HealthSystem = { id, name: name.trim() };
+        set((s) => ({ healthSystems: { ...s.healthSystems, [id]: record } }));
+        return record;
+      },
+
+      updateHealthSystem(id, updates) {
+        const existing = get().healthSystems[id];
+        if (!existing) return;
+        set((s) => ({
+          healthSystems: {
+            ...s.healthSystems,
+            [id]: { ...existing, name: updates.name.trim() },
+          },
+        }));
+      },
+
+      deleteHealthSystem(id) {
+        set((s) => {
+          const specialistIds = new Set(
+            Object.values(s.specialists)
+              .filter((sp) => sp.healthSystemId === id)
+              .map((sp) => sp.id),
+          );
+          const clinicIds = new Set(
+            Object.values(s.clinics)
+              .filter((clinic) => specialistIds.has(clinic.cdiSpecialistId))
+              .map((clinic) => clinic.id),
+          );
+          const providerIds = new Set(
+            Object.values(s.providers)
+              .filter((provider) => clinicIds.has(provider.clinicId))
+              .map((provider) => provider.id),
+          );
+          return deleteOrgRecords(s, {
+            healthSystemIds: new Set([id]),
+            specialistIds,
+            clinicIds,
+            providerIds,
+          });
+        });
+      },
+
+      createSpecialist(name, healthSystemId) {
+        const id = newId('specialist');
+        const record: CDISpecialist = { id, name: name.trim(), healthSystemId };
+        set((s) => ({ specialists: { ...s.specialists, [id]: record } }));
+        return record;
+      },
+
+      updateSpecialist(id, updates) {
+        const existing = get().specialists[id];
+        if (!existing) return;
+        set((s) => ({
+          specialists: {
+            ...s.specialists,
+            [id]: { ...existing, name: updates.name.trim() },
+          },
+        }));
+      },
+
+      deleteSpecialist(id) {
+        set((s) => {
+          const clinicIds = new Set(
+            Object.values(s.clinics)
+              .filter((clinic) => clinic.cdiSpecialistId === id)
+              .map((clinic) => clinic.id),
+          );
+          const providerIds = new Set(
+            Object.values(s.providers)
+              .filter((provider) => clinicIds.has(provider.clinicId))
+              .map((provider) => provider.id),
+          );
+          return deleteOrgRecords(s, {
+            healthSystemIds: new Set(),
+            specialistIds: new Set([id]),
+            clinicIds,
+            providerIds,
+          });
+        });
+      },
+
+      createClinic(name, cdiSpecialistId) {
+        const id = newId('clinic');
+        const record: Clinic = { id, name: name.trim(), cdiSpecialistId };
+        set((s) => ({ clinics: { ...s.clinics, [id]: record } }));
+        return record;
+      },
+
+      updateClinic(id, updates) {
+        const existing = get().clinics[id];
+        if (!existing) return;
+        set((s) => ({
+          clinics: {
+            ...s.clinics,
+            [id]: { ...existing, name: updates.name.trim() },
+          },
+        }));
+      },
+
+      deleteClinic(id) {
+        set((s) => {
+          const providerIds = new Set(
+            Object.values(s.providers)
+              .filter((provider) => provider.clinicId === id)
+              .map((provider) => provider.id),
+          );
+          return deleteOrgRecords(s, {
+            healthSystemIds: new Set(),
+            specialistIds: new Set(),
+            clinicIds: new Set([id]),
+            providerIds,
+          });
+        });
+      },
+
+      createProvider(name, clinicId, specialty = '') {
+        const id = newId('provider');
+        const trimmedSpecialty = specialty.trim();
+        const record: Provider = {
+          id,
+          name: name.trim(),
+          clinicId,
+          ...(trimmedSpecialty ? { specialty: trimmedSpecialty } : {}),
+        };
+        set((s) => ({ providers: { ...s.providers, [id]: record } }));
+        return record;
+      },
+
+      updateProvider(id, updates) {
+        const existing = get().providers[id];
+        if (!existing) return;
+        const trimmedSpecialty = updates.specialty?.trim();
+        const next: Provider = {
+          ...existing,
+          name: updates.name.trim(),
+          ...(trimmedSpecialty ? { specialty: trimmedSpecialty } : { specialty: undefined }),
+        };
+        set((s) => ({ providers: { ...s.providers, [id]: next } }));
+      },
+
+      deleteProvider(id) {
+        set((s) =>
+          deleteOrgRecords(s, {
+            healthSystemIds: new Set(),
+            specialistIds: new Set(),
+            clinicIds: new Set(),
+            providerIds: new Set([id]),
+          }),
+        );
       },
 
       assignIssueToProvider(providerId, issueLabelId, initialNotes = '', initialAttachments = []) {
@@ -255,5 +422,40 @@ function migratePersistedState(
     ...baseline,
     ...state,
     providerIssues,
+  };
+}
+
+function deleteOrgRecords(
+  s: EntitiesSlice & UiSlice,
+  ids: {
+    healthSystemIds: Set<string>;
+    specialistIds: Set<string>;
+    clinicIds: Set<string>;
+    providerIds: Set<string>;
+  },
+): Partial<EntitiesSlice & UiSlice> {
+  const healthSystems = { ...s.healthSystems };
+  const specialists = { ...s.specialists };
+  const clinics = { ...s.clinics };
+  const providers = { ...s.providers };
+  const providerIssues = { ...s.providerIssues };
+
+  for (const id of ids.healthSystemIds) delete healthSystems[id];
+  for (const id of ids.specialistIds) delete specialists[id];
+  for (const id of ids.clinicIds) delete clinics[id];
+  for (const id of ids.providerIds) delete providers[id];
+  for (const issue of Object.values(s.providerIssues)) {
+    if (ids.providerIds.has(issue.providerId)) delete providerIssues[issue.id];
+  }
+
+  return {
+    healthSystems,
+    specialists,
+    clinics,
+    providers,
+    providerIssues,
+    selectedNodeId: null,
+    selectedNodeType: null,
+    labelScopeProviderIds: null,
   };
 }

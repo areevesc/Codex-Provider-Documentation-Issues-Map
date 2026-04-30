@@ -1,13 +1,19 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { getSpecialistForClinic } from '@/store/selectors';
 import { activeIssueCountsForClinic } from '@/lib/counts';
+import { graphNodeId } from '@/lib/ids';
+import { confirmOrgDelete, getOrgDeleteImpact } from '@/lib/orgDeletion';
 import { isCurrentStatus } from '@/types/domain';
 import type { IssueStatus } from '@/types/domain';
 import { PanelFrame, PanelSection } from './PanelFrame';
 import { NodeLink } from './NodeLink';
 import { IssueCountList } from './IssueCountList';
 import { StatusPill } from '@/components/ui/StatusPill';
+import { Button } from '@/components/ui/Button';
+import { OrgEntityDialog } from '@/components/org/OrgEntityDialog';
+import type { OrgEntityType } from '@/lib/orgDeletion';
 
 interface ClinicPanelProps {
   clinicId: string;
@@ -19,6 +25,10 @@ export function ClinicPanel({ clinicId }: ClinicPanelProps) {
   const providersMap = useAppStore((s) => s.providers);
   const providerIssuesMap = useAppStore((s) => s.providerIssues);
   const issueLabelsMap = useAppStore((s) => s.issueLabels);
+  const setSelection = useAppStore((s) => s.setSelection);
+  const deleteClinic = useAppStore((s) => s.deleteClinic);
+  const [editOpen, setEditOpen] = useState(false);
+  const [addProviderOpen, setAddProviderOpen] = useState(false);
 
   const providers = useMemo(
     () =>
@@ -35,8 +45,10 @@ export function ClinicPanel({ clinicId }: ClinicPanelProps) {
   );
 
   const activeIssuesByProvider = useMemo(() => {
-    const out: Record<string, Array<{ id: string; issueLabelId: string; status: IssueStatus }>> =
-      {};
+    const out: Record<
+      string,
+      Array<{ id: string; issueLabelId: string; status: IssueStatus }>
+    > = {};
     for (const pi of Object.values(providerIssuesMap)) {
       if (!isCurrentStatus(pi.status)) continue;
       if (!out[pi.providerId]) out[pi.providerId] = [];
@@ -49,71 +61,139 @@ export function ClinicPanel({ clinicId }: ClinicPanelProps) {
     return <div className="p-4 text-sm text-ink-muted">Clinic not found.</div>;
   }
 
+  function handleDelete() {
+    if (!clinic) return;
+    const impact = getOrgDeleteImpact(useAppStore.getState(), 'clinic', clinic.id);
+    if (!confirmOrgDelete(clinic.name, impact)) return;
+    const parentId = clinic.cdiSpecialistId;
+    deleteClinic(clinic.id);
+    setSelection(graphNodeId.specialist(parentId), 'specialist');
+  }
+
+  function handleOrgSaved(entityType: OrgEntityType, id: string) {
+    if (entityType === 'clinic') {
+      setSelection(graphNodeId.clinic(id), 'clinic');
+    } else if (entityType === 'provider') {
+      setSelection(graphNodeId.provider(id), 'provider');
+    }
+  }
+
   return (
-    <PanelFrame
-      type="clinic"
-      title={clinic.name}
-      subtitle={`${providers.length} provider${providers.length === 1 ? '' : 's'}`}
-    >
-      <PanelSection title="CDI Specialist">
-        {specialist ? (
-          <NodeLink type="specialist" refId={specialist.id}>
-            {specialist.name}
-          </NodeLink>
-        ) : (
-          <span className="text-xs text-ink-muted">Unassigned</span>
-        )}
-      </PanelSection>
-
-      <PanelSection title="Providers">
-        {providers.length === 0 ? (
-          <div className="text-xs text-ink-muted">No providers.</div>
-        ) : (
-          <ul className="space-y-3">
-            {providers.map((p) => {
-              const issues = activeIssuesByProvider[p.id] ?? [];
-              return (
-                <li key={p.id}>
-                  <div className="flex items-center gap-1">
-                    <NodeLink type="provider" refId={p.id} className="text-sm">
-                      {p.name}
-                    </NodeLink>
-                    {p.specialty && (
-                      <span className="text-xs text-ink-muted">· {p.specialty}</span>
-                    )}
-                  </div>
-                  {issues.length > 0 && (
-                    <ul className="ml-2 mt-0.5 space-y-0.5 border-l border-line/50 pl-2 sm:ml-3">
-                      {issues.map((pi) => {
-                        const label = issueLabelsMap[pi.issueLabelId];
-                        return (
-                          <li key={pi.id} className="flex flex-wrap items-center gap-1.5">
-                            <NodeLink
-                              type="label"
-                              refId={pi.issueLabelId}
-                              className="max-w-full text-xs"
-                            >
-                              {label?.name ?? 'Unknown label'}
-                            </NodeLink>
-                            <StatusPill status={pi.status} />
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </PanelSection>
-
-      <PanelSection
-        title="Active Issue Summary"
-        rightAdornment={<span className="text-[11px] text-ink-muted">scoped to this clinic</span>}
+    <>
+      <PanelFrame
+        type="clinic"
+        title={clinic.name}
+        subtitle={`${providers.length} provider${providers.length === 1 ? '' : 's'}`}
+        headerActions={
+          <div className="flex flex-wrap justify-end gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setEditOpen(true)}
+              icon={<Pencil className="h-3.5 w-3.5" />}
+            >
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={handleDelete}
+              icon={<Trash2 className="h-3.5 w-3.5" />}
+            >
+              Delete
+            </Button>
+          </div>
+        }
       >
-        <IssueCountList counts={counts} emptyText="No active issues at this clinic." />
-      </PanelSection>
-    </PanelFrame>
+        <PanelSection title="CDI Specialist">
+          {specialist ? (
+            <NodeLink type="specialist" refId={specialist.id}>
+              {specialist.name}
+            </NodeLink>
+          ) : (
+            <span className="text-xs text-ink-muted">Unassigned</span>
+          )}
+        </PanelSection>
+
+        <PanelSection
+          title="Providers"
+          rightAdornment={
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setAddProviderOpen(true)}
+              icon={<Plus className="h-3.5 w-3.5" />}
+            >
+              Add provider
+            </Button>
+          }
+        >
+          {providers.length === 0 ? (
+            <div className="text-xs text-ink-muted">No providers.</div>
+          ) : (
+            <ul className="space-y-3">
+              {providers.map((p) => {
+                const issues = activeIssuesByProvider[p.id] ?? [];
+                return (
+                  <li key={p.id}>
+                    <div className="flex items-center gap-1">
+                      <NodeLink type="provider" refId={p.id} className="text-sm">
+                        {p.name}
+                      </NodeLink>
+                      {p.specialty && (
+                        <span className="text-xs text-ink-muted">· {p.specialty}</span>
+                      )}
+                    </div>
+                    {issues.length > 0 && (
+                      <ul className="ml-2 mt-0.5 space-y-0.5 border-l border-line/50 pl-2 sm:ml-3">
+                        {issues.map((pi) => {
+                          const label = issueLabelsMap[pi.issueLabelId];
+                          return (
+                            <li key={pi.id} className="flex flex-wrap items-center gap-1.5">
+                              <NodeLink
+                                type="label"
+                                refId={pi.issueLabelId}
+                                className="max-w-full text-xs"
+                              >
+                                {label?.name ?? 'Unknown label'}
+                              </NodeLink>
+                              <StatusPill status={pi.status} />
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </PanelSection>
+
+        <PanelSection
+          title="Active Issue Summary"
+          rightAdornment={<span className="text-[11px] text-ink-muted">scoped to this clinic</span>}
+        >
+          <IssueCountList counts={counts} emptyText="No active issues at this clinic." />
+        </PanelSection>
+      </PanelFrame>
+
+      <OrgEntityDialog
+        open={editOpen}
+        mode="edit"
+        entityType="clinic"
+        entityId={clinic.id}
+        onClose={() => setEditOpen(false)}
+        onSaved={handleOrgSaved}
+      />
+      <OrgEntityDialog
+        open={addProviderOpen}
+        mode="create"
+        entityType="provider"
+        parentId={clinic.id}
+        onClose={() => setAddProviderOpen(false)}
+        onSaved={handleOrgSaved}
+      />
+    </>
   );
 }
