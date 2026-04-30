@@ -31,7 +31,7 @@ export function ProviderDetailPage() {
         </p>
         <Link
           to="/"
-          className="mt-4 inline-flex items-center gap-1.5 text-sm text-accent-specialist hover:underline"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm text-accent-primary hover:underline"
         >
           <Home className="h-4 w-4" /> Back to graph
         </Link>
@@ -57,7 +57,7 @@ export function ProviderDetailPage() {
       <header className="mt-3 border-b border-line pb-6">
         <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <Badge tone="green">Provider</Badge>
+            <Badge tone="provider">Provider</Badge>
             <h1 className="mt-2 text-xl font-semibold text-ink sm:text-2xl">{provider.name}</h1>
             {provider.specialty && (
               <div className="mt-1 text-sm text-ink-muted">{provider.specialty}</div>

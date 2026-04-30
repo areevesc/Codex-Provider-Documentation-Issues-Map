@@ -3,7 +3,7 @@ import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes } fro
 type InputProps = InputHTMLAttributes<HTMLInputElement>;
 
 const baseFieldClasses =
-  'block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-accent-specialist focus:outline-none focus:ring-2 focus:ring-accent-specialist/25 disabled:cursor-not-allowed disabled:opacity-60';
+  'block w-full rounded-md border border-line bg-surface-raised px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/25 disabled:cursor-not-allowed disabled:opacity-60';
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { className = '', ...rest },

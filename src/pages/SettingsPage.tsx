@@ -12,8 +12,14 @@ const appearanceModes = [
 const colorThemes = [
   { value: 'classic', label: 'Classic', description: 'Purple, blue, green, amber' },
   { value: 'clinical', label: 'Clinical', description: 'Teal and blue emphasis' },
-  { value: 'rose', label: 'Rose', description: 'Warmer accent set' },
+  { value: 'blue', label: 'Blue', description: 'Blue, cyan, green, amber' },
+  { value: 'green', label: 'Green', description: 'Green, teal, blue, amber' },
+  { value: 'purple', label: 'Purple', description: 'Purple, blue, teal, amber' },
+  { value: 'rose', label: 'Red / rose', description: 'Rose, pink, blue, orange' },
+  { value: 'amber', label: 'Amber', description: 'Amber, orange, blue, green' },
 ] as const;
+
+type ColorTheme = (typeof colorThemes)[number]['value'];
 
 export function SettingsPage() {
   const appearanceMode = useAppStore((s) => s.appearanceMode);
@@ -50,7 +56,7 @@ export function SettingsPage() {
                       className={[
                         'rounded-md border px-3 py-2 text-sm font-medium transition-colors',
                         appearanceMode === mode.value
-                          ? 'border-accent-specialist bg-accent-specialist/15 text-ink'
+                          ? 'border-accent-primary bg-accent-primary/15 text-ink'
                           : 'border-line bg-surface-raised text-ink-muted hover:bg-surface-subtle hover:text-ink',
                       ].join(' ')}
                     >
@@ -73,7 +79,7 @@ export function SettingsPage() {
                       className={[
                         'flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-left transition-colors',
                         colorTheme === theme.value
-                          ? 'border-accent-specialist bg-accent-specialist/15'
+                          ? 'border-accent-primary bg-accent-primary/15'
                           : 'border-line bg-surface-raised hover:bg-surface-subtle',
                       ].join(' ')}
                     >
@@ -155,11 +161,15 @@ function Header({ icon, title }: { icon: React.ReactNode; title: string }) {
   );
 }
 
-function ThemeSwatches({ theme }: { theme: (typeof colorThemes)[number]['value'] }) {
-  const colors: Record<typeof theme, string[]> = {
-    classic: ['bg-indigo-500', 'bg-blue-500', 'bg-emerald-500', 'bg-yellow-500'],
-    clinical: ['bg-teal-500', 'bg-sky-500', 'bg-green-500', 'bg-amber-500'],
-    rose: ['bg-pink-400', 'bg-sky-400', 'bg-teal-400', 'bg-orange-400'],
+function ThemeSwatches({ theme }: { theme: ColorTheme }) {
+  const colors: Record<ColorTheme, string[]> = {
+    classic: ['bg-slate-400', 'bg-indigo-500', 'bg-blue-500', 'bg-emerald-500', 'bg-yellow-500'],
+    clinical: ['bg-teal-500', 'bg-sky-500', 'bg-blue-500', 'bg-green-500', 'bg-amber-500'],
+    blue: ['bg-blue-600', 'bg-sky-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-amber-500'],
+    green: ['bg-green-600', 'bg-emerald-500', 'bg-teal-500', 'bg-sky-500', 'bg-amber-500'],
+    purple: ['bg-violet-600', 'bg-violet-500', 'bg-blue-500', 'bg-teal-500', 'bg-amber-500'],
+    rose: ['bg-rose-600', 'bg-rose-500', 'bg-pink-500', 'bg-sky-500', 'bg-orange-500'],
+    amber: ['bg-amber-600', 'bg-amber-500', 'bg-orange-600', 'bg-sky-500', 'bg-green-500'],
   };
   return (
     <span className="flex shrink-0 gap-1">

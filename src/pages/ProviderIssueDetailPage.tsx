@@ -26,7 +26,7 @@ export function ProviderIssueDetailPage() {
         </p>
         <Link
           to={providerId ? `/providers/${providerId}` : '/'}
-          className="mt-4 inline-flex items-center gap-1 text-sm text-accent-specialist hover:underline"
+          className="mt-4 inline-flex items-center gap-1 text-sm text-accent-primary hover:underline"
         >
           <ChevronLeft className="h-4 w-4" />
           Back
@@ -46,7 +46,7 @@ export function ProviderIssueDetailPage() {
       </Link>
 
       <header className="mt-3 border-b border-line pb-5">
-        <Badge tone="amber">Provider Issue</Badge>
+        <Badge tone="label">Provider Issue</Badge>
         <h1 className="mt-2 text-xl font-semibold text-ink sm:text-2xl">
           {label?.name ?? 'Unknown label'}
         </h1>

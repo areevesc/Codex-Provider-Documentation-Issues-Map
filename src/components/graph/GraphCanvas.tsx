@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { buildGraphElements } from '@/lib/graphBuilder';
 import { parseGraphNodeId } from '@/lib/ids';
 import type { NodeType } from '@/types/graph';
-import { graphStylesheet } from './graphStyles';
+import { createGraphStylesheet } from './graphStyles';
 import { useGraphSync } from './useGraphSync';
 import { useGraphFocus } from './useGraphFocus';
 
@@ -35,6 +35,8 @@ export function GraphCanvas() {
   const providers = useAppStore((s) => s.providers);
   const issueLabels = useAppStore((s) => s.issueLabels);
   const providerIssues = useAppStore((s) => s.providerIssues);
+  const appearanceMode = useAppStore((s) => s.appearanceMode);
+  const colorTheme = useAppStore((s) => s.colorTheme);
 
   const selectedNodeId = useAppStore((s) => s.selectedNodeId);
   const setSelection = useAppStore((s) => s.setSelection);
@@ -61,7 +63,7 @@ export function GraphCanvas() {
     if (!containerRef.current) return;
     const cy = cytoscape({
       container: containerRef.current,
-      style: graphStylesheet,
+      style: createGraphStylesheet(),
       elements: [],
       minZoom: 0.25,
       maxZoom: 3,
@@ -76,7 +78,9 @@ export function GraphCanvas() {
       const parsed = parseGraphNodeId(node.id());
       if (!parsed) return;
       const type: NodeType =
-        parsed.prefix === 'sp'
+        parsed.prefix === 'hs'
+          ? 'healthSystem'
+          : parsed.prefix === 'sp'
           ? 'specialist'
           : parsed.prefix === 'cl'
             ? 'clinic'
@@ -113,6 +117,13 @@ export function GraphCanvas() {
 
   useGraphSync(cyRef, elements);
   useGraphFocus(cyRef, selectedNodeId);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      cyRef.current?.style().fromJson(createGraphStylesheet()).update();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [appearanceMode, colorTheme]);
 
   // Keep the instance sized to its container. Cytoscape listens to window
   // resize by default, but the three-pane layout can change size without a

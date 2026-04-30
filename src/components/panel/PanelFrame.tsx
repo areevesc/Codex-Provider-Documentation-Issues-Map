@@ -19,11 +19,11 @@ const typeLabels: Record<NodeType, string> = {
 };
 
 const typeTones: Record<NodeType, Parameters<typeof Badge>[0]['tone']> = {
-  healthSystem: 'default',
-  specialist: 'purple',
-  clinic: 'blue',
-  provider: 'green',
-  label: 'amber',
+  healthSystem: 'system',
+  specialist: 'specialist',
+  clinic: 'clinic',
+  provider: 'provider',
+  label: 'label',
 };
 
 export function PanelFrame({ type, title, subtitle, headerActions, children }: PanelFrameProps) {

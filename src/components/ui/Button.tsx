@@ -19,7 +19,7 @@ interface LinkButtonProps extends Omit<LinkProps, 'className'> {
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    'bg-accent-specialist text-surface hover:bg-accent-specialist/90 active:bg-accent-specialist/80',
+    'bg-accent-primary text-surface hover:bg-accent-primary/90 active:bg-accent-primary/80',
   secondary:
     'border border-line bg-surface-panel text-ink hover:bg-surface-subtle active:bg-surface-subtle',
   ghost: 'text-ink-muted hover:text-ink hover:bg-surface-panel',

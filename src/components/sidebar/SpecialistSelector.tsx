@@ -26,7 +26,7 @@ export function SpecialistSelector() {
             const v = e.target.value;
             setSpecialistFilter(v === ALL_VALUE ? null : v);
           }}
-          className="block w-full appearance-none rounded-md border border-line bg-surface-raised px-3 py-2 pr-8 text-sm text-ink focus:border-accent-specialist focus:outline-none focus:ring-2 focus:ring-accent-specialist/25"
+          className="block w-full appearance-none rounded-md border border-line bg-surface-raised px-3 py-2 pr-8 text-sm text-ink focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/25"
         >
           <option value={ALL_VALUE}>All specialists</option>
           {sorted.map((sp) => (

@@ -3,8 +3,10 @@ import { Library, Network, Settings } from 'lucide-react';
 
 const navCls = ({ isActive }: { isActive: boolean }) =>
   [
-    'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
-    isActive ? 'bg-surface-panel text-ink' : 'text-ink-muted hover:bg-surface-panel hover:text-ink',
+    'flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors',
+    isActive
+      ? 'border-accent-primary/30 bg-accent-primary/15 text-ink'
+      : 'border-transparent text-ink-muted hover:border-line hover:bg-surface-panel hover:text-ink',
   ].join(' ');
 
 export function TopNav() {

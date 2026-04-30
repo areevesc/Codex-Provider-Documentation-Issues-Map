@@ -47,7 +47,7 @@ interface UiSlice {
    *  means global (e.g. selected from search or Issue Library). */
   labelScopeProviderIds: string[] | null;
   appearanceMode: 'dark' | 'light';
-  colorTheme: 'classic' | 'clinical' | 'rose';
+  colorTheme: 'classic' | 'clinical' | 'blue' | 'green' | 'purple' | 'rose' | 'amber';
 }
 
 export interface AppState extends EntitiesSlice, UiSlice {

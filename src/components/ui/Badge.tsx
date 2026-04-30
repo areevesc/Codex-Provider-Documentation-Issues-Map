@@ -1,6 +1,17 @@
 import type { ReactNode } from 'react';
 
-type Tone = 'default' | 'purple' | 'blue' | 'green' | 'amber' | 'muted';
+type Tone =
+  | 'default'
+  | 'system'
+  | 'specialist'
+  | 'clinic'
+  | 'provider'
+  | 'label'
+  | 'purple'
+  | 'blue'
+  | 'green'
+  | 'amber'
+  | 'muted';
 
 interface BadgeProps {
   tone?: Tone;
@@ -10,6 +21,11 @@ interface BadgeProps {
 
 const toneClasses: Record<Tone, string> = {
   default: 'bg-surface-subtle text-ink border-line',
+  system: 'bg-accent-healthSystem/15 text-accent-healthSystem border-accent-healthSystem/30',
+  specialist: 'bg-accent-specialist/15 text-accent-specialist border-accent-specialist/30',
+  clinic: 'bg-accent-clinic/15 text-accent-clinic border-accent-clinic/30',
+  provider: 'bg-accent-provider/15 text-accent-provider border-accent-provider/30',
+  label: 'bg-accent-label/15 text-accent-label border-accent-label/30',
   purple: 'bg-accent-specialist/15 text-accent-specialist border-accent-specialist/30',
   blue: 'bg-accent-clinic/15 text-accent-clinic border-accent-clinic/30',
   green: 'bg-accent-provider/15 text-accent-provider border-accent-provider/30',

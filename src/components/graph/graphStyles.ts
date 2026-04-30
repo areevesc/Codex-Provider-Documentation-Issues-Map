@@ -1,10 +1,39 @@
 import type cytoscape from 'cytoscape';
 
+const fallbackColors = {
+  surface: '#0f1115',
+  surfacePanel: '#1c2230',
+  line: '#2a3245',
+  ink: '#e6ecf5',
+  specialist: '#6366f1',
+  clinic: '#3b82f6',
+  provider: '#10b981',
+  label: '#eab308',
+} as const;
+
+function cssColor(name: string, fallback: string) {
+  if (typeof window === 'undefined') return fallback;
+  const raw = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return raw ? `rgb(${raw})` : fallback;
+}
+
 /**
  * Cytoscape stylesheet. Nodes are shaped and colored by type; selection
  * emphasizes the focused node + its neighborhood, and fades everything else.
  */
-export const graphStylesheet: cytoscape.StylesheetJson = [
+export function createGraphStylesheet(): cytoscape.StylesheetJson {
+  const colors = {
+    surface: cssColor('--color-surface', fallbackColors.surface),
+    surfacePanel: cssColor('--color-surface-panel', fallbackColors.surfacePanel),
+    line: cssColor('--color-line', fallbackColors.line),
+    ink: cssColor('--color-ink', fallbackColors.ink),
+    specialist: cssColor('--color-accent-specialist', fallbackColors.specialist),
+    clinic: cssColor('--color-accent-clinic', fallbackColors.clinic),
+    provider: cssColor('--color-accent-provider', fallbackColors.provider),
+    label: cssColor('--color-accent-label', fallbackColors.label),
+  };
+
+  return [
   // ── Base node ─────────────────────────────────────────────────────────
   {
     selector: 'node',
@@ -13,14 +42,14 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
       'text-valign': 'bottom',
       'text-halign': 'center',
       'text-margin-y': 6,
-      color: '#e6ecf5',
+      color: colors.ink,
       'font-size': 10,
       'font-weight': 500,
       'text-outline-width': 2,
-      'text-outline-color': '#0f1115',
-      'background-color': '#1c2230',
+      'text-outline-color': colors.surface,
+      'background-color': colors.surfacePanel,
       'border-width': 2,
-      'border-color': '#2a3245',
+      'border-color': colors.line,
       width: 28,
       height: 28,
       'transition-property': 'opacity, border-color, background-color, border-width',
@@ -32,8 +61,8 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
   {
     selector: 'node[type="specialist"]',
     style: {
-      'background-color': '#a78bfa',
-      'border-color': '#c4b5fd',
+      'background-color': colors.specialist,
+      'border-color': colors.specialist,
       width: 44,
       height: 44,
       'font-size': 12,
@@ -43,8 +72,8 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
   {
     selector: 'node[type="clinic"]',
     style: {
-      'background-color': '#60a5fa',
-      'border-color': '#93c5fd',
+      'background-color': colors.clinic,
+      'border-color': colors.clinic,
       shape: 'round-rectangle',
       width: 36,
       height: 36,
@@ -53,8 +82,8 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
   {
     selector: 'node[type="provider"]',
     style: {
-      'background-color': '#34d399',
-      'border-color': '#6ee7b7',
+      'background-color': colors.provider,
+      'border-color': colors.provider,
       width: 24,
       height: 24,
     },
@@ -62,8 +91,8 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
   {
     selector: 'node[type="label"]',
     style: {
-      'background-color': '#fbbf24',
-      'border-color': '#fcd34d',
+      'background-color': colors.label,
+      'border-color': colors.label,
       shape: 'diamond',
       width: 30,
       height: 30,
@@ -76,7 +105,7 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
     style: {
       'curve-style': 'bezier',
       width: 1.2,
-      'line-color': '#2a3245',
+      'line-color': colors.line,
       'target-arrow-shape': 'none',
       opacity: 0.75,
       'transition-property': 'opacity, line-color, width',
@@ -95,7 +124,7 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
   {
     selector: 'node.focused',
     style: {
-      'border-color': '#ffffff',
+      'border-color': colors.ink,
       'border-width': 3,
       opacity: 1,
       'z-index': 20,
@@ -104,7 +133,7 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
   {
     selector: 'node.focused-primary',
     style: {
-      'border-color': '#ffffff',
+      'border-color': colors.ink,
       'border-width': 4,
       'z-index': 21,
     },
@@ -112,7 +141,7 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
   {
     selector: 'edge.focused',
     style: {
-      'line-color': '#e6ecf5',
+      'line-color': colors.ink,
       opacity: 1,
       width: 2,
       'z-index': 20,
@@ -124,4 +153,5 @@ export const graphStylesheet: cytoscape.StylesheetJson = [
       opacity: 0.12,
     },
   },
-];
+  ];
+}

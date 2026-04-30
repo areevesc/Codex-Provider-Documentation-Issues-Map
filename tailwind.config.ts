@@ -19,6 +19,8 @@ export default {
           faint: 'rgb(var(--color-ink-faint) / <alpha-value>)',
         },
         accent: {
+          primary: 'rgb(var(--color-accent-primary) / <alpha-value>)',
+          healthSystem: 'rgb(var(--color-accent-health-system) / <alpha-value>)',
           specialist: 'rgb(var(--color-accent-specialist) / <alpha-value>)',
           clinic: 'rgb(var(--color-accent-clinic) / <alpha-value>)',
           provider: 'rgb(var(--color-accent-provider) / <alpha-value>)',

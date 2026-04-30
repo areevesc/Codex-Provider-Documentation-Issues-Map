@@ -224,7 +224,9 @@ export function HierarchyView() {
                 onClick={() => toggleHealthSystem(hs.id)}
                 className={[
                   'flex w-full items-center gap-2 rounded-md px-2 py-2.5 text-left transition-colors',
-                  isHsSelected ? 'bg-surface-subtle ring-1 ring-line' : 'hover:bg-surface-subtle',
+                  isHsSelected
+                    ? 'bg-accent-healthSystem/10 ring-1 ring-accent-healthSystem/25'
+                    : 'hover:bg-surface-subtle',
                 ].join(' ')}
               >
                 <ChevronRight
@@ -233,12 +235,12 @@ export function HierarchyView() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`truncate text-sm font-bold ${isHsSelected ? 'text-ink' : 'text-ink'}`}
+                      className={`truncate text-sm font-bold ${isHsSelected ? 'text-accent-healthSystem' : 'text-ink'}`}
                     >
                       {hs.name}
                     </span>
                     {hsTotal > 0 && (
-                      <span className="shrink-0 rounded-full bg-surface-panel px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-ink-muted ring-1 ring-line">
+                      <span className="shrink-0 rounded-full bg-accent-healthSystem/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-accent-healthSystem">
                         {hsTotal}
                       </span>
                     )}

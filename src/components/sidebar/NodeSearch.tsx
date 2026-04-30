@@ -154,11 +154,11 @@ interface HitGroupProps {
 }
 
 const typeToTone: Record<NodeType, Parameters<typeof Badge>[0]['tone']> = {
-  healthSystem: 'muted',
-  specialist: 'purple',
-  clinic: 'blue',
-  provider: 'green',
-  label: 'amber',
+  healthSystem: 'system',
+  specialist: 'specialist',
+  clinic: 'clinic',
+  provider: 'provider',
+  label: 'label',
 };
 
 function HitGroup({ title, hits, onPick }: HitGroupProps) {

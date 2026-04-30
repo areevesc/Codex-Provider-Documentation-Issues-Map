@@ -25,7 +25,7 @@ export function GraphFilters() {
                   type="checkbox"
                   checked={on}
                   onChange={(e) => setVisibleNodeTypes({ [type]: e.target.checked })}
-                  className="h-3.5 w-3.5 rounded border-line text-accent-specialist focus:ring-accent-specialist/30"
+                  className="h-3.5 w-3.5 rounded border-line text-accent-primary focus:ring-accent-primary/30"
                 />
                 <span className={`inline-block h-2.5 w-2.5 rounded-full ${dotClass}`} />
                 <span className="flex-1">{label}</span>

@@ -175,7 +175,7 @@ export function AssignIssueDialog({ open, providerId, onClose }: AssignIssueDial
                     displayValue={(l: IssueLabel | null) => l?.name ?? ''}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search existing labels..."
-                    className="block w-full rounded-md border border-line bg-surface-raised py-2 pl-3 pr-9 text-sm text-ink placeholder:text-ink-faint focus:border-accent-specialist focus:outline-none focus:ring-2 focus:ring-accent-specialist/25"
+                    className="block w-full rounded-md border border-line bg-surface-raised py-2 pl-3 pr-9 text-sm text-ink placeholder:text-ink-faint focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/25"
                   />
                   <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-2.5 text-ink-muted">
                     <ChevronDown className="h-4 w-4" aria-hidden="true" />
@@ -205,7 +205,7 @@ export function AssignIssueDialog({ open, providerId, onClose }: AssignIssueDial
                               <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
                                 {isSel && (
                                   <Check
-                                    className="h-4 w-4 text-accent-specialist"
+                                    className="h-4 w-4 text-accent-primary"
                                     aria-hidden="true"
                                   />
                                 )}
@@ -324,7 +324,7 @@ export function AssignIssueDialog({ open, providerId, onClose }: AssignIssueDial
               <Link
                 to="/issues"
                 onClick={handleClose}
-                className="inline-flex items-center gap-1 font-medium text-accent-specialist hover:underline"
+                className="inline-flex items-center gap-1 font-medium text-accent-primary hover:underline"
               >
                 Go to Issue Library
                 <ExternalLink className="h-3 w-3" />

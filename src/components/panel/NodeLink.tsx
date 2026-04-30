@@ -17,13 +17,15 @@ interface NodeLinkProps {
 export function NodeLink({ type, refId, children, className = '' }: NodeLinkProps) {
   const setSelection = useAppStore((s) => s.setSelection);
   const graphId =
-    type === 'specialist'
-      ? graphNodeId.specialist(refId)
-      : type === 'clinic'
-        ? graphNodeId.clinic(refId)
-        : type === 'provider'
-          ? graphNodeId.provider(refId)
-          : graphNodeId.label(refId);
+    type === 'healthSystem'
+      ? graphNodeId.healthSystem(refId)
+      : type === 'specialist'
+        ? graphNodeId.specialist(refId)
+        : type === 'clinic'
+          ? graphNodeId.clinic(refId)
+          : type === 'provider'
+            ? graphNodeId.provider(refId)
+            : graphNodeId.label(refId);
   return (
     <button
       type="button"
