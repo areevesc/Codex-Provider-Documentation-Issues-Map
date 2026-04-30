@@ -26,31 +26,23 @@ const typeTones: Record<NodeType, Parameters<typeof Badge>[0]['tone']> = {
   label: 'amber',
 };
 
-export function PanelFrame({
-  type,
-  title,
-  subtitle,
-  headerActions,
-  children,
-}: PanelFrameProps) {
+export function PanelFrame({ type, title, subtitle, headerActions, children }: PanelFrameProps) {
   return (
     <div className="flex min-h-full flex-col lg:h-full">
       <div className="border-b border-line bg-surface-panel px-3 py-2 sm:px-4">
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:flex-nowrap sm:gap-3">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-nowrap">
-            <Badge tone={typeTones[type]} className="shrink-0">
-              {typeLabels[type]}
-            </Badge>
-            <h2 className="min-w-[7rem] flex-1 truncate text-sm font-semibold leading-tight text-ink">
-              {title}
-            </h2>
-            {subtitle && (
-              <div className="min-w-0 max-w-full truncate text-xs text-ink-muted sm:max-w-[8rem] sm:shrink">
-                {subtitle}
-              </div>
-            )}
+        <div className="flex min-w-0 items-start justify-between gap-2 sm:gap-3">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              <Badge tone={typeTones[type]} className="shrink-0">
+                {typeLabels[type]}
+              </Badge>
+              <h2 className="min-w-0 flex-1 break-words text-sm font-semibold leading-tight text-ink">
+                {title}
+              </h2>
+            </div>
+            {subtitle && <div className="text-xs leading-snug text-ink-muted">{subtitle}</div>}
           </div>
-          {headerActions && <div className="shrink-0">{headerActions}</div>}
+          {headerActions && <div className="shrink-0 pt-0.5">{headerActions}</div>}
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-visible lg:overflow-y-auto">{children}</div>

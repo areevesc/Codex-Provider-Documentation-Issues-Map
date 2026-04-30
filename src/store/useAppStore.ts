@@ -16,7 +16,7 @@ import { newId, graphNodeId } from '@/lib/ids';
 import { nowIso } from '@/lib/dates';
 
 const STORAGE_KEY = 'cdi-prototype';
-const STORAGE_VERSION = 4;
+const STORAGE_VERSION = 5;
 
 type ById<T> = Record<string, T>;
 
