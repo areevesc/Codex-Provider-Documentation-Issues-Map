@@ -16,7 +16,7 @@ import { newId, graphNodeId } from '@/lib/ids';
 import { nowIso } from '@/lib/dates';
 
 const STORAGE_KEY = 'cdi-prototype';
-const STORAGE_VERSION = 3;
+const STORAGE_VERSION = 4;
 
 type ById<T> = Record<string, T>;
 
@@ -235,8 +235,12 @@ export const useAppStore = create<AppState>()(
   ),
 );
 
-function migratePersistedState(persistedState: unknown): EntitiesSlice & UiSlice {
+function migratePersistedState(
+  persistedState: unknown,
+  persistedVersion?: number,
+): EntitiesSlice & UiSlice {
   const baseline = { ...initialEntities(), ...initialUi() };
+  if (persistedVersion !== STORAGE_VERSION) return baseline;
   if (!persistedState || typeof persistedState !== 'object') return baseline;
 
   const state = persistedState as Partial<EntitiesSlice & UiSlice>;

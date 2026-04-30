@@ -1,6 +1,7 @@
 import type { HealthSystem } from '@/types/domain';
+import { healthSystemDefinitions } from './structure';
 
-export const seedHealthSystems: HealthSystem[] = [
-  { id: 'hs-meridian', name: 'Meridian Health Partners' },
-  { id: 'hs-apex', name: 'Apex Medical Network' },
-];
+export const seedHealthSystems: HealthSystem[] = healthSystemDefinitions.map((healthSystem) => ({
+  id: healthSystem.id,
+  name: healthSystem.name,
+}));

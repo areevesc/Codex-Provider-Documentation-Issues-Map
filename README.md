@@ -20,3 +20,5 @@ npm run preview
 ```
 
 The app uses fake sample data only. Edits are stored in browser local storage so the prototype can be exercised without a backend. Do not enter real patient, provider, or clinical documentation data into the GitHub Pages deployment.
+
+Current seed scale: 2 health systems, 9 CDI specialists, 81 clinics, and 310 fictional providers.
