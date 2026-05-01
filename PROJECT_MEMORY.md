@@ -53,7 +53,7 @@ Persistent handoff notes for future Codex sessions. Update this file whenever sc
   - Link to Issue Library.
   - Demo-data reset.
   - Data-safety warning.
-  - Provider CSV import.
+  - Provider CSV import with a current issue-label reference table on the import page.
 
 ## Data And Persistence
 
@@ -90,6 +90,7 @@ health_system,cdi_specialist,clinic,provider,specialty,issue_label,status,notes
   - Shows a short confirmation warning before opening the file picker, including a reminder to delete demo data first if a clean import is desired.
   - Parses into a preview before import, including hierarchy counts, issue-row count, repeated-provider-row count, warnings, and sample rows.
   - Requires final confirmation from the preview before importing data.
+  - The import page includes a live list of current issue labels so spreadsheet authors can match existing labels by exact name.
   - Rejects unsupported columns to avoid accidentally importing PHI-heavy note/chart fields.
 
 ## Safety Boundaries

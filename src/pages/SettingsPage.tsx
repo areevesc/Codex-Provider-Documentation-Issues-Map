@@ -16,6 +16,7 @@ import { parseProviderCsv, previewProviderImport } from '@/lib/providerCsvImport
 import type { ProviderCsvPreview } from '@/lib/providerCsvImport';
 import type { ProviderImportRow, ProviderImportSummary } from '@/store/useAppStore';
 import { buildProviderIssueCsv, downloadCsv } from '@/lib/providerCsvExport';
+import { listIssueLabels } from '@/store/selectors';
 
 const appearanceModes = [
   { value: 'dark', label: 'Dark' },
@@ -42,6 +43,7 @@ interface PendingImport {
 export function SettingsPage() {
   const appearanceMode = useAppStore((s) => s.appearanceMode);
   const colorTheme = useAppStore((s) => s.colorTheme);
+  const issueLabels = useAppStore(listIssueLabels);
   const setAppearanceMode = useAppStore((s) => s.setAppearanceMode);
   const setColorTheme = useAppStore((s) => s.setColorTheme);
   const importProviderRows = useAppStore((s) => s.importProviderRows);
@@ -121,6 +123,8 @@ export function SettingsPage() {
     const date = new Date().toISOString().slice(0, 10);
     downloadCsv(`cdi-provider-issues-${date}.csv`, csv);
   }
+
+  const sortedIssueLabels = [...issueLabels].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="h-full overflow-y-auto">
@@ -212,16 +216,49 @@ export function SettingsPage() {
               </p>
               <p className="text-xs text-ink-muted">
                 Required columns are health_system, cdi_specialist, clinic, and provider. Optional
-                columns are specialty, issue_label, status, and notes.
+                columns are specialty, issue_label, status, and notes. Use an exact existing
+                issue label name if you want to assign a known label.
               </p>
               <pre className="overflow-x-auto rounded-md border border-line bg-surface-raised p-3 text-xs text-ink">
                 health_system,cdi_specialist,clinic,provider,specialty,issue_label,status,notes
               </pre>
               <p className="text-xs text-ink-muted">
                 Status can be Active, Improving, or Resolved. Blank status imports as Active.
-                Created, updated, and resolved dates are set automatically on import.
-                New issue_label values are added to the Issue Library with blank descriptions.
+                Created, updated, and resolved dates are set automatically on import. New
+                issue_label values are added to the Issue Library with blank descriptions.
               </p>
+              <div className="overflow-hidden rounded-md border border-line bg-surface-raised text-xs">
+                <div className="border-b border-line bg-surface-panel px-3 py-2 font-semibold text-ink">
+                  Current issue labels
+                </div>
+                <div className="max-h-56 overflow-auto">
+                  <table className="w-full text-left">
+                    <thead className="sticky top-0 bg-surface-raised text-[10px] uppercase tracking-wider text-ink-muted">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold">Label</th>
+                        <th className="px-3 py-2 font-semibold">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line text-ink">
+                      {sortedIssueLabels.map((label) => (
+                        <tr key={label.id}>
+                          <td className="px-3 py-2 font-medium">{label.name}</td>
+                          <td className="px-3 py-2 text-ink-muted">
+                            {label.description || 'No description yet.'}
+                          </td>
+                        </tr>
+                      ))}
+                      {sortedIssueLabels.length === 0 && (
+                        <tr>
+                          <td className="px-3 py-2 text-ink-muted" colSpan={2}>
+                            No issue labels exist yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
               <div className="overflow-hidden rounded-md border border-line bg-surface-raised text-xs">
                 <div className="border-b border-line bg-surface-panel px-3 py-2 font-semibold text-ink">
                   Example spreadsheet
