@@ -60,7 +60,7 @@ Persistent handoff notes for future Codex sessions. Update this file whenever sc
 - Stack: React, Vite, TypeScript, Zustand, Tailwind, Headless UI, Cytoscape-related graph code still present.
 - Browser persistence is via Zustand localStorage key `cdi-prototype`.
 - There is no backend currently.
-- GitHub Pages builds derive the Vite base path from `GITHUB_PAGES`/`GITHUB_REPOSITORY` so the deployed app works under the repo subpath without relying on a manual workflow argument.
+- GitHub Pages builds derive the Vite base path from `GITHUB_PAGES` so the deployed app works under the repo subpath without relying on a manual workflow argument.
 - Seed data is fake and generated from `src/data/seed`.
 - Reset restores the built-in fictional seed dataset and discards local browser edits.
 - Current seed scale noted in README: 2 health systems, 9 CDI specialists, 81 clinics, and 310 fictional providers.
