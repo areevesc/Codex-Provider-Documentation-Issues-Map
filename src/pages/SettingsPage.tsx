@@ -210,14 +210,17 @@ export function SettingsPage() {
                 Import adds or updates providers, issue labels, statuses, and notes from a CSV.
                 Export creates a spreadsheet-friendly backup without images.
               </p>
+              <p className="text-xs text-ink-muted">
+                Required columns are health_system, cdi_specialist, clinic, and provider. Optional
+                columns are specialty, issue_label, issue_label_description, status, notes,
+                created_at, updated_at, and resolved_at.
+              </p>
               <pre className="overflow-x-auto rounded-md border border-line bg-surface-raised p-3 text-xs text-ink">
-                health_system,cdi_specialist,clinic,provider,specialty,issue_label,status,notes
+                health_system,cdi_specialist,clinic,provider,specialty,issue_label,issue_label_description,status,notes,created_at,updated_at,resolved_at
               </pre>
               <p className="text-xs text-ink-muted">
-                Required import columns: health_system, cdi_specialist, clinic, provider. Optional
-                issue columns: specialty, issue_label, issue_label_description, status, notes,
-                created_at, updated_at, resolved_at. Blank issue_label rows import roster-only
-                providers.
+                Leave issue_label blank for roster-only provider rows. Export uses the full format
+                above, one row per provider issue.
               </p>
               <div className="rounded-md border border-status-active/30 bg-status-active/10 px-3 py-2 text-xs text-status-active">
                 Imported notes must be fabricated for now. Do not include patient names, MRNs, DOBs,
