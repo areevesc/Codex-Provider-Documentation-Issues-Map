@@ -37,12 +37,12 @@
   }
 
   :root[data-theme='clinical'] {
-    --color-accent-primary: 13 148 136;
-    --color-accent-health-system: 20 184 166;
-    --color-accent-specialist: 14 165 233;
-    --color-accent-clinic: 59 130 246;
+    --color-accent-primary: 20 184 166;
+    --color-accent-health-system: 100 116 139;
+    --color-accent-specialist: 13 148 136;
+    --color-accent-clinic: 14 165 233;
     --color-accent-provider: 34 197 94;
-    --color-accent-label: 245 158 11;
+    --color-accent-label: 234 179 8;
   }
 
   :root[data-theme='classic'] {
@@ -55,48 +55,48 @@
   }
 
   :root[data-theme='blue'] {
-    --color-accent-primary: 37 99 235;
-    --color-accent-health-system: 59 130 246;
-    --color-accent-specialist: 14 165 233;
+    --color-accent-primary: 2 132 199;
+    --color-accent-health-system: 71 85 105;
+    --color-accent-specialist: 29 78 216;
     --color-accent-clinic: 6 182 212;
-    --color-accent-provider: 16 185 129;
-    --color-accent-label: 245 158 11;
+    --color-accent-provider: 20 184 166;
+    --color-accent-label: 250 204 21;
   }
 
   :root[data-theme='green'] {
-    --color-accent-primary: 22 163 74;
-    --color-accent-health-system: 34 197 94;
-    --color-accent-specialist: 20 184 166;
-    --color-accent-clinic: 14 165 233;
+    --color-accent-primary: 101 163 13;
+    --color-accent-health-system: 87 83 78;
+    --color-accent-specialist: 22 101 52;
+    --color-accent-clinic: 13 148 136;
     --color-accent-provider: 132 204 22;
-    --color-accent-label: 245 158 11;
+    --color-accent-label: 217 119 6;
   }
 
   :root[data-theme='purple'] {
-    --color-accent-primary: 124 58 237;
-    --color-accent-health-system: 139 92 246;
-    --color-accent-specialist: 168 85 247;
-    --color-accent-clinic: 59 130 246;
-    --color-accent-provider: 20 184 166;
-    --color-accent-label: 245 158 11;
+    --color-accent-primary: 147 51 234;
+    --color-accent-health-system: 107 114 128;
+    --color-accent-specialist: 126 34 206;
+    --color-accent-clinic: 217 70 239;
+    --color-accent-provider: 45 212 191;
+    --color-accent-label: 251 191 36;
   }
 
   :root[data-theme='rose'] {
     --color-accent-primary: 225 29 72;
-    --color-accent-health-system: 244 63 94;
-    --color-accent-specialist: 236 72 153;
-    --color-accent-clinic: 14 165 233;
+    --color-accent-health-system: 120 113 108;
+    --color-accent-specialist: 190 18 60;
+    --color-accent-clinic: 244 114 182;
     --color-accent-provider: 20 184 166;
     --color-accent-label: 249 115 22;
   }
 
   :root[data-theme='amber'] {
-    --color-accent-primary: 217 119 6;
-    --color-accent-health-system: 245 158 11;
-    --color-accent-specialist: 234 88 12;
-    --color-accent-clinic: 14 165 233;
-    --color-accent-provider: 34 197 94;
-    --color-accent-label: 234 179 8;
+    --color-accent-primary: 180 83 9;
+    --color-accent-health-system: 120 113 108;
+    --color-accent-specialist: 194 65 12;
+    --color-accent-clinic: 245 158 11;
+    --color-accent-provider: 22 163 74;
+    --color-accent-label: 202 138 4;
   }
 
   html,
