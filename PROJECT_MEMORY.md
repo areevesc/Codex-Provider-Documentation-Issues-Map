@@ -66,7 +66,7 @@ Persistent handoff notes for future Codex sessions. Update this file whenever sc
 
 ## CSV Import
 
-- Intended product purpose: let a user replace the demo org/provider roster and optionally import/export provider issue assignments, notes, statuses, and issue labels in spreadsheet-friendly CSV form.
+- Intended product purpose: let a user import/export provider rosters plus provider issue assignments, notes, statuses, and issue labels in spreadsheet-friendly CSV form.
 - Current accepted headers:
 
 ```csv
@@ -77,15 +77,17 @@ health_system,cdi_specialist,clinic,provider,specialty,issue_label,issue_label_d
   - Parses provider CSV in `src/lib/providerCsvImport.ts`.
   - Exports provider issue CSV in `src/lib/providerCsvExport.ts`.
   - Imports from Settings.
-  - Replaces current health system, CDI specialist, clinic, provider, and provider-issue assignment data in browser storage.
+  - Import adds or updates matching health systems, CDI specialists, clinics, providers, issue labels, and provider issues.
+  - Import does not delete existing roster/provider issue data.
+  - Demo/roster data can be cleared separately from Settings with Delete demo data.
   - Preserves the issue-label library so default/common labels remain available.
   - Creates missing issue labels from imported `issue_label` values, using `issue_label_description` when available.
   - Supports roster-only rows when `issue_label` is blank.
   - Repeats provider/org columns per issue row so exported CSVs remain sortable/filterable.
   - Deduplicates provider/org records by normalized names within the imported hierarchy.
-  - Shows a confirmation warning before opening the file picker.
-  - Parses into a preview before replacement, including hierarchy counts, issue-row count, repeated-provider-row count, warnings, and sample rows.
-  - Requires final confirmation from the preview before replacing roster data.
+  - Shows a short confirmation warning before opening the file picker, including a reminder to delete demo data first if a clean import is desired.
+  - Parses into a preview before import, including hierarchy counts, issue-row count, repeated-provider-row count, warnings, and sample rows.
+  - Requires final confirmation from the preview before importing data.
   - Rejects unsupported columns to avoid accidentally importing PHI-heavy note/chart fields.
 
 ## Safety Boundaries

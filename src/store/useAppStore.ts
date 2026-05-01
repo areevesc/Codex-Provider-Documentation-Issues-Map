@@ -45,6 +45,8 @@ export interface ProviderImportSummary {
   providersSkipped: number;
   issueLabelsCreated: number;
   providerIssuesCreated: number;
+  providerIssuesUpdated: number;
+  providerIssuesSkipped: number;
 }
 
 function indexById<T extends { id: string }>(items: readonly T[]): ById<T> {
@@ -105,7 +107,7 @@ export interface AppState extends EntitiesSlice, UiSlice {
   createProvider(name: string, clinicId: string, specialty?: string): Provider;
   updateProvider(id: string, updates: Pick<Provider, 'name' | 'specialty'>): void;
   deleteProvider(id: string): void;
-  replaceProviderRoster(rows: ProviderImportRow[]): ProviderImportSummary;
+  importProviderRows(rows: ProviderImportRow[]): ProviderImportSummary;
 
   // mutations — provider issues
   assignIssueToProvider(
@@ -126,6 +128,7 @@ export interface AppState extends EntitiesSlice, UiSlice {
 
   // dev
   resetToSeed(): void;
+  clearRosterData(): void;
 }
 
 function initialEntities(): EntitiesSlice {
@@ -352,7 +355,7 @@ export const useAppStore = create<AppState>()(
         );
       },
 
-      replaceProviderRoster(rows) {
+      importProviderRows(rows) {
         const summary: ProviderImportSummary = {
           rowsProcessed: rows.length,
           healthSystemsCreated: 0,
@@ -362,15 +365,17 @@ export const useAppStore = create<AppState>()(
           providersSkipped: 0,
           issueLabelsCreated: 0,
           providerIssuesCreated: 0,
+          providerIssuesUpdated: 0,
+          providerIssuesSkipped: 0,
         };
 
         set((s) => {
-          const healthSystems: ById<HealthSystem> = {};
-          const specialists: ById<CDISpecialist> = {};
-          const clinics: ById<Clinic> = {};
-          const providers: ById<Provider> = {};
+          const healthSystems: ById<HealthSystem> = { ...s.healthSystems };
+          const specialists: ById<CDISpecialist> = { ...s.specialists };
+          const clinics: ById<Clinic> = { ...s.clinics };
+          const providers: ById<Provider> = { ...s.providers };
           const issueLabels: ById<IssueLabel> = { ...s.issueLabels };
-          const providerIssues: ById<ProviderIssue> = {};
+          const providerIssues: ById<ProviderIssue> = { ...s.providerIssues };
 
           for (const row of rows) {
             const healthSystemName = row.healthSystem.trim();
@@ -436,7 +441,11 @@ export const useAppStore = create<AppState>()(
               providers[id] = provider;
               summary.providersCreated += 1;
             } else {
-              summary.providersSkipped += 1;
+              if (!provider.specialty && specialty) {
+                providers[provider.id] = { ...provider, specialty };
+              } else {
+                summary.providersSkipped += 1;
+              }
             }
 
             if (!issueLabelName) continue;
@@ -458,6 +467,33 @@ export const useAppStore = create<AppState>()(
             const issueStatus = row.status ?? 'Active';
             const createdAt = row.createdAt ?? nowIso();
             const updatedAt = row.updatedAt ?? createdAt;
+            const existingIssue = Object.values(providerIssues).find(
+              (issue) =>
+                issue.providerId === provider.id &&
+                issue.issueLabelId === issueLabel.id &&
+                (row.createdAt ? issue.createdAt === row.createdAt : issue.status === issueStatus),
+            );
+            if (existingIssue) {
+              const nextIssue: ProviderIssue = {
+                ...existingIssue,
+                status: issueStatus,
+                notes: row.notes ?? existingIssue.notes,
+                createdAt: row.createdAt ?? existingIssue.createdAt,
+                updatedAt,
+                resolvedAt:
+                  issueStatus === 'Resolved'
+                    ? row.resolvedAt ?? existingIssue.resolvedAt ?? updatedAt
+                    : undefined,
+              };
+              if (sameProviderIssue(existingIssue, nextIssue)) {
+                summary.providerIssuesSkipped += 1;
+              } else {
+                providerIssues[existingIssue.id] = nextIssue;
+                summary.providerIssuesUpdated += 1;
+              }
+              continue;
+            }
+
             const providerIssue: ProviderIssue = {
               id: newId('providerIssue'),
               providerId: provider.id,
@@ -481,11 +517,6 @@ export const useAppStore = create<AppState>()(
             providers,
             issueLabels,
             providerIssues,
-            selectedNodeId: null,
-            selectedNodeType: null,
-            specialistFilterId: null,
-            searchQuery: '',
-            graphLayoutPositions: {},
             labelScopeProviderIds: null,
           };
         });
@@ -570,6 +601,22 @@ export const useAppStore = create<AppState>()(
       resetToSeed() {
         set({ ...initialEntities(), ...initialUi() });
       },
+
+      clearRosterData() {
+        set({
+          healthSystems: {},
+          specialists: {},
+          clinics: {},
+          providers: {},
+          providerIssues: {},
+          selectedNodeId: null,
+          selectedNodeType: null,
+          specialistFilterId: null,
+          searchQuery: '',
+          graphLayoutPositions: {},
+          labelScopeProviderIds: null,
+        });
+      },
     }),
     {
       name: STORAGE_KEY,
@@ -630,6 +677,16 @@ function namesMatch(left: string, right: string): boolean {
 
 function findByName<T extends { name: string }>(items: T[], name: string): T | undefined {
   return items.find((item) => namesMatch(item.name, name));
+}
+
+function sameProviderIssue(left: ProviderIssue, right: ProviderIssue): boolean {
+  return (
+    left.status === right.status &&
+    left.notes === right.notes &&
+    left.createdAt === right.createdAt &&
+    left.updatedAt === right.updatedAt &&
+    left.resolvedAt === right.resolvedAt
+  );
 }
 
 function deleteOrgRecords(

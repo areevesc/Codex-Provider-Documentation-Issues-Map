@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { ResetSeedButton } from '@/components/layout/ResetSeedButton';
+import { DeleteRosterDataButton, ResetSeedButton } from '@/components/layout/ResetSeedButton';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { parseProviderCsv, previewProviderImport } from '@/lib/providerCsvImport';
 import type { ProviderCsvPreview } from '@/lib/providerCsvImport';
@@ -44,7 +44,7 @@ export function SettingsPage() {
   const colorTheme = useAppStore((s) => s.colorTheme);
   const setAppearanceMode = useAppStore((s) => s.setAppearanceMode);
   const setColorTheme = useAppStore((s) => s.setColorTheme);
-  const replaceProviderRoster = useAppStore((s) => s.replaceProviderRoster);
+  const importProviderRows = useAppStore((s) => s.importProviderRows);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importSummary, setImportSummary] = useState<ProviderImportSummary | null>(null);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
@@ -91,11 +91,11 @@ export function SettingsPage() {
   function handleChooseImportFile() {
     const confirmed = window.confirm(
       [
-        'Importing this CSV will replace the current health system, CDI specialist, clinic, provider, and provider-issue assignment data in this browser.',
+        'Import adds or updates providers, issue labels, and provider issue notes from the CSV.',
         '',
-        'The issue-label library will be preserved.',
+        'If you want to remove demo data first, use Delete demo data before importing.',
         '',
-        'Do not include PHI: no patient names, MRNs, DOBs, encounter dates, chart text, patient-specific notes, or clinical screenshots. Imported notes must be fabricated for now.',
+        'Do not include PHI. Imported notes must be fabricated for now.',
       ].join('\n'),
     );
     if (!confirmed) return;
@@ -110,7 +110,7 @@ export function SettingsPage() {
 
   function handleConfirmPendingImport() {
     if (!pendingImport) return;
-    const summary = replaceProviderRoster(pendingImport.rows);
+    const summary = importProviderRows(pendingImport.rows);
     setImportSummary(summary);
     setImportWarnings(pendingImport.warnings);
     setPendingImport(null);
@@ -204,11 +204,11 @@ export function SettingsPage() {
           </section>
 
           <section className="rounded-md border border-line bg-surface-panel">
-            <Header icon={<FileUp className="h-4 w-4" />} title="Import" />
+            <Header icon={<FileUp className="h-4 w-4" />} title="Import / Export" />
             <div className="space-y-3 px-4 py-4 text-sm text-ink-muted">
               <p>
-                Import or export provider issue CSVs. Import replaces the current roster and
-                provider issue assignments while preserving existing issue labels.
+                Import adds or updates providers, issue labels, statuses, and notes from a CSV.
+                Export creates a spreadsheet-friendly backup without images.
               </p>
               <pre className="overflow-x-auto rounded-md border border-line bg-surface-raised p-3 text-xs text-ink">
                 health_system,cdi_specialist,clinic,provider,specialty,issue_label,status,notes
@@ -223,10 +223,6 @@ export function SettingsPage() {
                 Imported notes must be fabricated for now. Do not include patient names, MRNs, DOBs,
                 encounter dates, patient-specific notes, or chart text.
               </div>
-              <div className="rounded-md border border-status-improving/30 bg-status-improving/10 px-3 py-2 text-xs text-status-improving">
-                Import replaces health systems, CDI specialists, clinics, providers, and existing
-                provider issue assignments in this browser. Issue labels are kept.
-              </div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -240,7 +236,7 @@ export function SettingsPage() {
                 icon={<FileUp className="h-4 w-4" />}
                 onClick={handleChooseImportFile}
               >
-                {isImporting ? 'Importing...' : 'Replace roster from CSV'}
+                {isImporting ? 'Importing...' : 'Import CSV'}
               </Button>
               <Button
                 type="button"
@@ -267,7 +263,7 @@ export function SettingsPage() {
                         Cancel
                       </Button>
                       <Button size="sm" variant="primary" onClick={handleConfirmPendingImport}>
-                        Replace roster now
+                        Import now
                       </Button>
                     </div>
                   </div>
@@ -299,8 +295,8 @@ export function SettingsPage() {
                   </dl>
 
                   <div className="mt-3 rounded-md border border-status-active/30 bg-status-active/10 px-3 py-2 text-status-active">
-                    Confirming will replace current roster data and clear existing provider issue
-                    assignments. Issue labels will be kept.
+                    Confirming will add or update matching records. It will not delete demo data;
+                    use Delete demo data first if you want a clean import.
                   </div>
 
                   {pendingImport.warnings.length > 0 && (
@@ -379,6 +375,14 @@ export function SettingsPage() {
                       label="Provider issues created"
                       value={importSummary.providerIssuesCreated}
                     />
+                    <SummaryStat
+                      label="Provider issues updated"
+                      value={importSummary.providerIssuesUpdated}
+                    />
+                    <SummaryStat
+                      label="Provider issues skipped"
+                      value={importSummary.providerIssuesSkipped}
+                    />
                   </dl>
                 </div>
               )}
@@ -403,9 +407,13 @@ export function SettingsPage() {
             <div className="space-y-3 px-4 py-4 text-sm text-ink-muted">
               <p>
                 Resetting restores the built-in fictional seed data and discards local edits in this
-                browser.
+                browser. Deleting demo data clears the roster and provider issue assignments while
+                keeping the issue-label library.
               </p>
-              <ResetSeedButton />
+              <div className="flex flex-wrap gap-2">
+                <DeleteRosterDataButton />
+                <ResetSeedButton />
+              </div>
             </div>
           </section>
 
