@@ -34,7 +34,7 @@ jobs:
         run: npm ci
 
       - name: Build site
-        run: npm run build -- --base="/Codex-Provider-Documentation-Issues-Map/"
+        run: npm run build
 
       - name: Prepare SPA fallback
         run: |
