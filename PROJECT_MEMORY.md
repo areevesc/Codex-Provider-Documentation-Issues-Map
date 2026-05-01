@@ -66,21 +66,25 @@ Persistent handoff notes for future Codex sessions. Update this file whenever sc
 
 ## CSV Import
 
-- Intended product purpose: let a user replace the demo org/provider roster with real spreadsheet-derived org/provider data, with hierarchy linkages rebuilt from the imported data.
+- Intended product purpose: let a user replace the demo org/provider roster and optionally import/export provider issue assignments, notes, statuses, and issue labels in spreadsheet-friendly CSV form.
 - Current accepted headers:
 
 ```csv
-health_system,cdi_specialist,clinic,provider,specialty
+health_system,cdi_specialist,clinic,provider,specialty,issue_label,issue_label_description,status,notes,created_at,updated_at,resolved_at
 ```
 
 - Current implementation behavior as of this memory update:
   - Parses provider CSV in `src/lib/providerCsvImport.ts`.
+  - Exports provider issue CSV in `src/lib/providerCsvExport.ts`.
   - Imports from Settings.
   - Replaces current health system, CDI specialist, clinic, provider, and provider-issue assignment data in browser storage.
   - Preserves the issue-label library so default/common labels remain available.
-  - Deduplicates repeated CSV rows by normalized names within the imported hierarchy.
+  - Creates missing issue labels from imported `issue_label` values, using `issue_label_description` when available.
+  - Supports roster-only rows when `issue_label` is blank.
+  - Repeats provider/org columns per issue row so exported CSVs remain sortable/filterable.
+  - Deduplicates provider/org records by normalized names within the imported hierarchy.
   - Shows a confirmation warning before opening the file picker.
-  - Parses into a preview before replacement, including hierarchy counts, duplicate provider-row count, warnings, and sample rows.
+  - Parses into a preview before replacement, including hierarchy counts, issue-row count, repeated-provider-row count, warnings, and sample rows.
   - Requires final confirmation from the preview before replacing roster data.
   - Rejects unsupported columns to avoid accidentally importing PHI-heavy note/chart fields.
 
@@ -100,16 +104,15 @@ health_system,cdi_specialist,clinic,provider,specialty
 ## Known Gaps / Risks
 
 - Import has no automated tests yet.
-- There is no export/backup flow.
+- Export is CSV-only and does not include image attachments or full UI/localStorage backup metadata.
 - Browser localStorage is fragile for large images and not appropriate for real PHI.
 - The app has strong prototype safety language, but technical controls are not sufficient for real clinical data.
 - A zero-byte `.codex` file is currently untracked and pre-existing; it has not been touched.
 
 ## Recommended Next Work
 
-- Add CSV template download from Settings.
 - Add tests for CSV parsing and import replacement behavior.
-- Add export/backup once import replacement is stable.
+- Consider full JSON backup/export if notes/images become important to preserve outside the browser.
 - Revisit graph view only after the core hierarchy/import/provider issue workflow is solid.
 
 ## Session Handoff Protocol

@@ -1,5 +1,13 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import { CheckCircle2, FileUp, Library, Palette, RotateCcw, ShieldAlert } from 'lucide-react';
+import {
+  CheckCircle2,
+  Download,
+  FileUp,
+  Library,
+  Palette,
+  RotateCcw,
+  ShieldAlert,
+} from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ResetSeedButton } from '@/components/layout/ResetSeedButton';
@@ -7,6 +15,7 @@ import { Button, ButtonLink } from '@/components/ui/Button';
 import { parseProviderCsv, previewProviderImport } from '@/lib/providerCsvImport';
 import type { ProviderCsvPreview } from '@/lib/providerCsvImport';
 import type { ProviderImportRow, ProviderImportSummary } from '@/store/useAppStore';
+import { buildProviderIssueCsv, downloadCsv } from '@/lib/providerCsvExport';
 
 const appearanceModes = [
   { value: 'dark', label: 'Dark' },
@@ -86,7 +95,7 @@ export function SettingsPage() {
         '',
         'The issue-label library will be preserved.',
         '',
-        'Do not include PHI: no patient names, MRNs, DOBs, encounter dates, chart text, patient-specific notes, or clinical screenshots.',
+        'Do not include PHI: no patient names, MRNs, DOBs, encounter dates, chart text, patient-specific notes, or clinical screenshots. Imported notes must be fabricated for now.',
       ].join('\n'),
     );
     if (!confirmed) return;
@@ -105,6 +114,12 @@ export function SettingsPage() {
     setImportSummary(summary);
     setImportWarnings(pendingImport.warnings);
     setPendingImport(null);
+  }
+
+  function handleExportProviderIssueCsv() {
+    const csv = buildProviderIssueCsv(useAppStore.getState());
+    const date = new Date().toISOString().slice(0, 10);
+    downloadCsv(`cdi-provider-issues-${date}.csv`, csv);
   }
 
   return (
@@ -192,15 +207,21 @@ export function SettingsPage() {
             <Header icon={<FileUp className="h-4 w-4" />} title="Import" />
             <div className="space-y-3 px-4 py-4 text-sm text-ink-muted">
               <p>
-                Import a CSV with one row per provider. This replaces the current roster data while
-                preserving the issue-label library.
+                Import or export provider issue CSVs. Import replaces the current roster and
+                provider issue assignments while preserving existing issue labels.
               </p>
               <pre className="overflow-x-auto rounded-md border border-line bg-surface-raised p-3 text-xs text-ink">
-                health_system,cdi_specialist,clinic,provider,specialty
+                health_system,cdi_specialist,clinic,provider,specialty,issue_label,status,notes
               </pre>
+              <p className="text-xs text-ink-muted">
+                Required import columns: health_system, cdi_specialist, clinic, provider. Optional
+                issue columns: specialty, issue_label, issue_label_description, status, notes,
+                created_at, updated_at, resolved_at. Blank issue_label rows import roster-only
+                providers.
+              </p>
               <div className="rounded-md border border-status-active/30 bg-status-active/10 px-3 py-2 text-xs text-status-active">
-                Import files must not include patient names, MRNs, DOBs, encounter dates,
-                patient-specific notes, or chart text.
+                Imported notes must be fabricated for now. Do not include patient names, MRNs, DOBs,
+                encounter dates, patient-specific notes, or chart text.
               </div>
               <div className="rounded-md border border-status-improving/30 bg-status-improving/10 px-3 py-2 text-xs text-status-improving">
                 Import replaces health systems, CDI specialists, clinics, providers, and existing
@@ -220,6 +241,14 @@ export function SettingsPage() {
                 onClick={handleChooseImportFile}
               >
                 {isImporting ? 'Importing...' : 'Replace roster from CSV'}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                icon={<Download className="h-4 w-4" />}
+                onClick={handleExportProviderIssueCsv}
+              >
+                Export provider issue CSV
               </Button>
               {importError && (
                 <p className="rounded-md border border-status-active/30 bg-status-active/10 px-3 py-2 text-xs text-status-active">
@@ -256,8 +285,16 @@ export function SettingsPage() {
                     <PreviewStat label="Clinics" value={pendingImport.preview.clinicCount} />
                     <PreviewStat label="Providers" value={pendingImport.preview.providerCount} />
                     <PreviewStat
-                      label="Duplicate provider rows skipped"
-                      value={pendingImport.preview.duplicateProviderRows}
+                      label="Issue rows"
+                      value={pendingImport.preview.issueRowCount}
+                    />
+                    <PreviewStat
+                      label="Repeated provider rows"
+                      value={pendingImport.preview.repeatedProviderRows}
+                    />
+                    <PreviewStat
+                      label="Issue labels in CSV"
+                      value={pendingImport.preview.issueLabelCount}
                     />
                   </dl>
 
@@ -291,6 +328,8 @@ export function SettingsPage() {
                           <th className="px-2 py-1.5 font-semibold">Clinic</th>
                           <th className="px-2 py-1.5 font-semibold">Provider</th>
                           <th className="px-2 py-1.5 font-semibold">Specialty</th>
+                          <th className="px-2 py-1.5 font-semibold">Issue label</th>
+                          <th className="px-2 py-1.5 font-semibold">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-line text-ink">
@@ -301,6 +340,8 @@ export function SettingsPage() {
                             <td className="px-2 py-1.5">{row.clinic}</td>
                             <td className="px-2 py-1.5">{row.provider}</td>
                             <td className="px-2 py-1.5">{row.specialty || '—'}</td>
+                            <td className="px-2 py-1.5">{row.issueLabel || '—'}</td>
+                            <td className="px-2 py-1.5">{row.status || '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -326,7 +367,18 @@ export function SettingsPage() {
                     />
                     <SummaryStat label="Clinics created" value={importSummary.clinicsCreated} />
                     <SummaryStat label="Providers created" value={importSummary.providersCreated} />
-                    <SummaryStat label="Rows skipped" value={importSummary.providersSkipped} />
+                    <SummaryStat
+                      label="Repeated provider rows"
+                      value={importSummary.providersSkipped}
+                    />
+                    <SummaryStat
+                      label="Issue labels created"
+                      value={importSummary.issueLabelsCreated}
+                    />
+                    <SummaryStat
+                      label="Provider issues created"
+                      value={importSummary.providerIssuesCreated}
+                    />
                   </dl>
                 </div>
               )}

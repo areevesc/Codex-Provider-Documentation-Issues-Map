@@ -1,7 +1,18 @@
 import type { ProviderImportRow } from '@/store/useAppStore';
+import { ISSUE_STATUSES } from '@/types/domain';
+import type { IssueStatus } from '@/types/domain';
 
 const REQUIRED_HEADERS = ['health_system', 'cdi_specialist', 'clinic', 'provider'] as const;
-const OPTIONAL_HEADERS = ['specialty'] as const;
+const OPTIONAL_HEADERS = [
+  'specialty',
+  'issue_label',
+  'issue_label_description',
+  'status',
+  'notes',
+  'created_at',
+  'updated_at',
+  'resolved_at',
+] as const;
 const ALLOWED_HEADERS = new Set<string>([...REQUIRED_HEADERS, ...OPTIONAL_HEADERS]);
 
 export interface ProviderCsvParseResult {
@@ -14,7 +25,9 @@ export interface ProviderCsvPreview {
   specialistCount: number;
   clinicCount: number;
   providerCount: number;
-  duplicateProviderRows: number;
+  issueRowCount: number;
+  repeatedProviderRows: number;
+  issueLabelCount: number;
   sampleRows: ProviderImportRow[];
 }
 
@@ -67,6 +80,13 @@ export function parseProviderCsv(csv: string): ProviderCsvParseResult {
       clinic: valueFor('clinic'),
       provider: valueFor('provider'),
       specialty: valueFor('specialty'),
+      issueLabel: valueFor('issue_label'),
+      issueLabelDescription: valueFor('issue_label_description'),
+      status: parseStatus(valueFor('status'), lineNumber, warnings),
+      notes: valueFor('notes'),
+      createdAt: parseOptionalIso(valueFor('created_at'), 'created_at', lineNumber, warnings),
+      updatedAt: parseOptionalIso(valueFor('updated_at'), 'updated_at', lineNumber, warnings),
+      resolvedAt: parseOptionalIso(valueFor('resolved_at'), 'resolved_at', lineNumber, warnings),
     };
 
     const missingValue = REQUIRED_HEADERS.find((header) => valueFor(header) === '');
@@ -88,7 +108,9 @@ export function previewProviderImport(rows: ProviderImportRow[]): ProviderCsvPre
   const specialists = new Set<string>();
   const clinics = new Set<string>();
   const providers = new Set<string>();
-  let duplicateProviderRows = 0;
+  const issueLabels = new Set<string>();
+  let repeatedProviderRows = 0;
+  let issueRowCount = 0;
 
   for (const row of rows) {
     const healthSystem = normalizeName(row.healthSystem);
@@ -102,8 +124,12 @@ export function previewProviderImport(rows: ProviderImportRow[]): ProviderCsvPre
     healthSystems.add(healthSystem);
     specialists.add(specialistKey);
     clinics.add(clinicKey);
-    if (providers.has(providerKey)) duplicateProviderRows += 1;
+    if (providers.has(providerKey)) repeatedProviderRows += 1;
     providers.add(providerKey);
+    if (row.issueLabel?.trim()) {
+      issueRowCount += 1;
+      issueLabels.add(normalizeName(row.issueLabel));
+    }
   }
 
   return {
@@ -111,7 +137,9 @@ export function previewProviderImport(rows: ProviderImportRow[]): ProviderCsvPre
     specialistCount: specialists.size,
     clinicCount: clinics.size,
     providerCount: providers.size,
-    duplicateProviderRows,
+    issueRowCount,
+    repeatedProviderRows,
+    issueLabelCount: issueLabels.size,
     sampleRows: rows.slice(0, 5),
   };
 }
@@ -122,6 +150,41 @@ function normalizeHeader(value: string): string {
 
 function normalizeName(value: string): string {
   return value.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function parseStatus(
+  value: string,
+  lineNumber: number,
+  warnings: string[],
+): IssueStatus | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const status = ISSUE_STATUSES.find((candidate) => namesMatch(candidate, trimmed));
+  if (status) return status;
+  warnings.push(
+    `Line ${lineNumber}: unsupported status "${trimmed}" changed to Active. Use Active, Improving, or Resolved.`,
+  );
+  return 'Active';
+}
+
+function parseOptionalIso(
+  value: string,
+  fieldName: string,
+  lineNumber: number,
+  warnings: string[],
+): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) {
+    warnings.push(`Line ${lineNumber}: ${fieldName} is not a valid date and was ignored.`);
+    return undefined;
+  }
+  return date.toISOString();
+}
+
+function namesMatch(left: string, right: string): boolean {
+  return normalizeName(left) === normalizeName(right);
 }
 
 function parseCsvRecords(csv: string): string[][] {

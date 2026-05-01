@@ -5,10 +5,10 @@ import type {
   Clinic,
   HealthSystem,
   IssueLabel,
+  IssueStatus,
   Provider,
   ProviderIssue,
   ProviderIssueAttachment,
-  IssueStatus,
 } from '@/types/domain';
 import type { NodeType } from '@/types/graph';
 import { seedRepository } from '@/data/repository/seedRepository';
@@ -27,6 +27,13 @@ export interface ProviderImportRow {
   clinic: string;
   provider: string;
   specialty?: string;
+  issueLabel?: string;
+  issueLabelDescription?: string;
+  status?: IssueStatus;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  resolvedAt?: string;
 }
 
 export interface ProviderImportSummary {
@@ -36,6 +43,8 @@ export interface ProviderImportSummary {
   clinicsCreated: number;
   providersCreated: number;
   providersSkipped: number;
+  issueLabelsCreated: number;
+  providerIssuesCreated: number;
 }
 
 function indexById<T extends { id: string }>(items: readonly T[]): ById<T> {
@@ -351,13 +360,17 @@ export const useAppStore = create<AppState>()(
           clinicsCreated: 0,
           providersCreated: 0,
           providersSkipped: 0,
+          issueLabelsCreated: 0,
+          providerIssuesCreated: 0,
         };
 
-        set(() => {
+        set((s) => {
           const healthSystems: ById<HealthSystem> = {};
           const specialists: ById<CDISpecialist> = {};
           const clinics: ById<Clinic> = {};
           const providers: ById<Provider> = {};
+          const issueLabels: ById<IssueLabel> = { ...s.issueLabels };
+          const providerIssues: ById<ProviderIssue> = {};
 
           for (const row of rows) {
             const healthSystemName = row.healthSystem.trim();
@@ -365,6 +378,7 @@ export const useAppStore = create<AppState>()(
             const clinicName = row.clinic.trim();
             const providerName = row.provider.trim();
             const specialty = row.specialty?.trim() ?? '';
+            const issueLabelName = row.issueLabel?.trim() ?? '';
 
             if (!healthSystemName || !specialistName || !clinicName || !providerName) {
               summary.providersSkipped += 1;
@@ -407,23 +421,57 @@ export const useAppStore = create<AppState>()(
               summary.clinicsCreated += 1;
             }
 
-            const provider = Object.values(providers).find(
+            let provider = Object.values(providers).find(
               (candidate) =>
                 candidate.clinicId === clinic.id && namesMatch(candidate.name, providerName),
             );
             if (!provider) {
               const id = newId('provider');
-              providers[id] = {
+              provider = {
                 id,
                 name: providerName,
                 clinicId: clinic.id,
                 ...(specialty ? { specialty } : {}),
               };
+              providers[id] = provider;
               summary.providersCreated += 1;
-              continue;
+            } else {
+              summary.providersSkipped += 1;
             }
 
-            summary.providersSkipped += 1;
+            if (!issueLabelName) continue;
+
+            let issueLabel = findByName(Object.values(issueLabels), issueLabelName);
+            if (!issueLabel) {
+              const now = nowIso();
+              issueLabel = {
+                id: newId('issueLabel'),
+                name: issueLabelName,
+                description: row.issueLabelDescription?.trim() ?? '',
+                createdAt: now,
+                updatedAt: now,
+              };
+              issueLabels[issueLabel.id] = issueLabel;
+              summary.issueLabelsCreated += 1;
+            }
+
+            const issueStatus = row.status ?? 'Active';
+            const createdAt = row.createdAt ?? nowIso();
+            const updatedAt = row.updatedAt ?? createdAt;
+            const providerIssue: ProviderIssue = {
+              id: newId('providerIssue'),
+              providerId: provider.id,
+              issueLabelId: issueLabel.id,
+              status: issueStatus,
+              notes: row.notes ?? '',
+              createdAt,
+              updatedAt,
+              ...(issueStatus === 'Resolved'
+                ? { resolvedAt: row.resolvedAt ?? updatedAt }
+                : {}),
+            };
+            providerIssues[providerIssue.id] = providerIssue;
+            summary.providerIssuesCreated += 1;
           }
 
           return {
@@ -431,7 +479,8 @@ export const useAppStore = create<AppState>()(
             specialists,
             clinics,
             providers,
-            providerIssues: {},
+            issueLabels,
+            providerIssues,
             selectedNodeId: null,
             selectedNodeType: null,
             specialistFilterId: null,
