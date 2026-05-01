@@ -45,24 +45,6 @@
     --color-accent-label: 234 179 8;
   }
 
-  :root[data-theme='classic'] {
-    --color-accent-primary: 99 102 241;
-    --color-accent-health-system: 148 163 184;
-    --color-accent-specialist: 99 102 241;
-    --color-accent-clinic: 59 130 246;
-    --color-accent-provider: 16 185 129;
-    --color-accent-label: 234 179 8;
-  }
-
-  :root[data-theme='blue'] {
-    --color-accent-primary: 2 132 199;
-    --color-accent-health-system: 71 85 105;
-    --color-accent-specialist: 29 78 216;
-    --color-accent-clinic: 6 182 212;
-    --color-accent-provider: 20 184 166;
-    --color-accent-label: 250 204 21;
-  }
-
   :root[data-theme='green'] {
     --color-accent-primary: 101 163 13;
     --color-accent-health-system: 87 83 78;

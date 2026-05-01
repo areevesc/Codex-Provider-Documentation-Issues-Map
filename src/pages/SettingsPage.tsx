@@ -14,9 +14,7 @@ const appearanceModes = [
 ] as const;
 
 const colorThemes = [
-  { value: 'classic', label: 'Classic', description: 'Balanced slate, indigo, blue, green' },
   { value: 'clinical', label: 'Clinical', description: 'Calm slate, teal, sky, green' },
-  { value: 'blue', label: 'Ocean', description: 'Slate, cobalt, cyan, teal' },
   { value: 'green', label: 'Forest', description: 'Stone, pine, teal, lime' },
   { value: 'purple', label: 'Amethyst', description: 'Gray, violet, fuchsia, teal' },
   { value: 'rose', label: 'Coral', description: 'Stone, rose, pink, teal' },
@@ -403,9 +401,7 @@ function PreviewStat({ label, value }: { label: string; value: number }) {
 
 function ThemeSwatches({ theme }: { theme: ColorTheme }) {
   const colors: Record<ColorTheme, string[]> = {
-    classic: ['bg-slate-400', 'bg-indigo-500', 'bg-blue-500', 'bg-emerald-500', 'bg-yellow-500'],
     clinical: ['bg-slate-500', 'bg-teal-500', 'bg-sky-500', 'bg-green-500', 'bg-yellow-500'],
-    blue: ['bg-slate-600', 'bg-blue-700', 'bg-cyan-500', 'bg-teal-500', 'bg-yellow-400'],
     green: ['bg-stone-500', 'bg-green-800', 'bg-teal-600', 'bg-lime-500', 'bg-amber-600'],
     purple: ['bg-gray-500', 'bg-purple-700', 'bg-fuchsia-500', 'bg-teal-400', 'bg-amber-400'],
     rose: ['bg-stone-500', 'bg-rose-700', 'bg-pink-400', 'bg-teal-500', 'bg-orange-500'],

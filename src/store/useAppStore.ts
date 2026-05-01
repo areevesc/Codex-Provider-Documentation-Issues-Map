@@ -19,6 +19,7 @@ const STORAGE_KEY = 'cdi-prototype';
 const STORAGE_VERSION = 5;
 
 type ById<T> = Record<string, T>;
+type ColorTheme = 'clinical' | 'green' | 'purple' | 'rose' | 'amber';
 
 export interface ProviderImportRow {
   healthSystem: string;
@@ -64,7 +65,7 @@ interface UiSlice {
    *  means global (e.g. selected from search or Issue Library). */
   labelScopeProviderIds: string[] | null;
   appearanceMode: 'dark' | 'light';
-  colorTheme: 'classic' | 'clinical' | 'blue' | 'green' | 'purple' | 'rose' | 'amber';
+  colorTheme: ColorTheme;
 }
 
 export interface AppState extends EntitiesSlice, UiSlice {
@@ -146,7 +147,7 @@ function initialUi(): UiSlice {
     graphLayoutPositions: {},
     labelScopeProviderIds: null,
     appearanceMode: 'dark',
-    colorTheme: 'classic',
+    colorTheme: 'clinical',
   };
 }
 
@@ -552,8 +553,22 @@ function migratePersistedState(
   return {
     ...baseline,
     ...state,
+    colorTheme: normalizeColorTheme((state as { colorTheme?: unknown }).colorTheme),
     providerIssues,
   };
+}
+
+function normalizeColorTheme(value: unknown): ColorTheme {
+  if (
+    value === 'clinical' ||
+    value === 'green' ||
+    value === 'purple' ||
+    value === 'rose' ||
+    value === 'amber'
+  ) {
+    return value;
+  }
+  return 'clinical';
 }
 
 function normalizeName(name: string): string {
