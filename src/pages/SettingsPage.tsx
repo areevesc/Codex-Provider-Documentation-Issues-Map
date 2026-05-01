@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
   CheckCircle2,
   Download,
@@ -16,7 +16,6 @@ import { parseProviderCsv, previewProviderImport } from '@/lib/providerCsvImport
 import type { ProviderCsvPreview } from '@/lib/providerCsvImport';
 import type { ProviderImportRow, ProviderImportSummary } from '@/store/useAppStore';
 import { buildProviderIssueCsv, downloadCsv } from '@/lib/providerCsvExport';
-import { listIssueLabels } from '@/store/selectors';
 
 const appearanceModes = [
   { value: 'dark', label: 'Dark' },
@@ -43,7 +42,7 @@ interface PendingImport {
 export function SettingsPage() {
   const appearanceMode = useAppStore((s) => s.appearanceMode);
   const colorTheme = useAppStore((s) => s.colorTheme);
-  const issueLabels = useAppStore(listIssueLabels);
+  const issueLabels = useAppStore((s) => s.issueLabels);
   const setAppearanceMode = useAppStore((s) => s.setAppearanceMode);
   const setColorTheme = useAppStore((s) => s.setColorTheme);
   const importProviderRows = useAppStore((s) => s.importProviderRows);
@@ -124,7 +123,10 @@ export function SettingsPage() {
     downloadCsv(`cdi-provider-issues-${date}.csv`, csv);
   }
 
-  const sortedIssueLabels = [...issueLabels].sort((a, b) => a.name.localeCompare(b.name));
+  const sortedIssueLabels = useMemo(
+    () => Object.values(issueLabels).sort((a, b) => a.name.localeCompare(b.name)),
+    [issueLabels],
+  );
 
   return (
     <div className="h-full overflow-y-auto">
