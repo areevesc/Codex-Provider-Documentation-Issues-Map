@@ -28,12 +28,8 @@ export interface ProviderImportRow {
   provider: string;
   specialty?: string;
   issueLabel?: string;
-  issueLabelDescription?: string;
   status?: IssueStatus;
   notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  resolvedAt?: string;
 }
 
 export interface ProviderImportSummary {
@@ -368,6 +364,7 @@ export const useAppStore = create<AppState>()(
           providerIssuesUpdated: 0,
           providerIssuesSkipped: 0,
         };
+        const importedAt = nowIso();
 
         set((s) => {
           const healthSystems: ById<HealthSystem> = { ...s.healthSystems };
@@ -456,7 +453,7 @@ export const useAppStore = create<AppState>()(
               issueLabel = {
                 id: newId('issueLabel'),
                 name: issueLabelName,
-                description: row.issueLabelDescription?.trim() ?? '',
+                description: '',
                 createdAt: now,
                 updatedAt: now,
               };
@@ -465,25 +462,19 @@ export const useAppStore = create<AppState>()(
             }
 
             const issueStatus = row.status ?? 'Active';
-            const createdAt = row.createdAt ?? nowIso();
-            const updatedAt = row.updatedAt ?? createdAt;
             const existingIssue = Object.values(providerIssues).find(
               (issue) =>
                 issue.providerId === provider.id &&
                 issue.issueLabelId === issueLabel.id &&
-                (row.createdAt ? issue.createdAt === row.createdAt : issue.status === issueStatus),
+                issue.status === issueStatus,
             );
             if (existingIssue) {
               const nextIssue: ProviderIssue = {
                 ...existingIssue,
                 status: issueStatus,
                 notes: row.notes ?? existingIssue.notes,
-                createdAt: row.createdAt ?? existingIssue.createdAt,
-                updatedAt,
-                resolvedAt:
-                  issueStatus === 'Resolved'
-                    ? row.resolvedAt ?? existingIssue.resolvedAt ?? updatedAt
-                    : undefined,
+                updatedAt: importedAt,
+                resolvedAt: issueStatus === 'Resolved' ? existingIssue.resolvedAt ?? importedAt : undefined,
               };
               if (sameProviderIssue(existingIssue, nextIssue)) {
                 summary.providerIssuesSkipped += 1;
@@ -500,11 +491,9 @@ export const useAppStore = create<AppState>()(
               issueLabelId: issueLabel.id,
               status: issueStatus,
               notes: row.notes ?? '',
-              createdAt,
-              updatedAt,
-              ...(issueStatus === 'Resolved'
-                ? { resolvedAt: row.resolvedAt ?? updatedAt }
-                : {}),
+              createdAt: importedAt,
+              updatedAt: importedAt,
+              ...(issueStatus === 'Resolved' ? { resolvedAt: importedAt } : {}),
             };
             providerIssues[providerIssue.id] = providerIssue;
             summary.providerIssuesCreated += 1;

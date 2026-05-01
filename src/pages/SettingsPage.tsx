@@ -208,19 +208,53 @@ export function SettingsPage() {
             <div className="space-y-3 px-4 py-4 text-sm text-ink-muted">
               <p>
                 Import adds or updates providers, issue labels, statuses, and notes from a CSV.
-                Export creates a spreadsheet-friendly backup without images.
+                Export uses the same columns and does not include images.
               </p>
               <p className="text-xs text-ink-muted">
                 Required columns are health_system, cdi_specialist, clinic, and provider. Optional
-                columns are specialty, issue_label, issue_label_description, status, notes,
-                created_at, updated_at, and resolved_at.
+                columns are specialty, issue_label, status, and notes.
               </p>
               <pre className="overflow-x-auto rounded-md border border-line bg-surface-raised p-3 text-xs text-ink">
-                health_system,cdi_specialist,clinic,provider,specialty,issue_label,issue_label_description,status,notes,created_at,updated_at,resolved_at
+                health_system,cdi_specialist,clinic,provider,specialty,issue_label,status,notes
               </pre>
               <p className="text-xs text-ink-muted">
-                Export uses the full format above, one row per provider issue.
+                Status can be Active, Improving, or Resolved. Blank status imports as Active.
+                Created, updated, and resolved dates are set automatically on import.
+                New issue_label values are added to the Issue Library with blank descriptions.
               </p>
+              <div className="overflow-hidden rounded-md border border-line bg-surface-raised text-xs">
+                <div className="border-b border-line bg-surface-panel px-3 py-2 font-semibold text-ink">
+                  Example spreadsheet
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="text-[10px] uppercase tracking-wider text-ink-muted">
+                      <tr>
+                        <th className="px-2 py-1.5 font-semibold">health_system</th>
+                        <th className="px-2 py-1.5 font-semibold">cdi_specialist</th>
+                        <th className="px-2 py-1.5 font-semibold">clinic</th>
+                        <th className="px-2 py-1.5 font-semibold">provider</th>
+                        <th className="px-2 py-1.5 font-semibold">specialty</th>
+                        <th className="px-2 py-1.5 font-semibold">issue_label</th>
+                        <th className="px-2 py-1.5 font-semibold">status</th>
+                        <th className="px-2 py-1.5 font-semibold">notes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line text-ink">
+                      <tr>
+                        <td className="px-2 py-1.5">North Health</td>
+                        <td className="px-2 py-1.5">Jordan Lee</td>
+                        <td className="px-2 py-1.5">Downtown Clinic</td>
+                        <td className="px-2 py-1.5">Dr. Avery Stone</td>
+                        <td className="px-2 py-1.5">Family Medicine</td>
+                        <td className="px-2 py-1.5">Missing specificity</td>
+                        <td className="px-2 py-1.5">Active</td>
+                        <td className="px-2 py-1.5">Fabricated example only.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
               <div className="rounded-md border border-status-active/30 bg-status-active/10 px-3 py-2 text-xs text-status-active">
                 Imported notes must be fabricated for now. Do not include patient names, MRNs, DOBs,
                 encounter dates, patient-specific notes, or chart text.

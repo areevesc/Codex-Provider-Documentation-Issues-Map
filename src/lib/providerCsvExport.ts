@@ -8,12 +8,8 @@ export const PROVIDER_ISSUE_CSV_HEADERS = [
   'provider',
   'specialty',
   'issue_label',
-  'issue_label_description',
   'status',
   'notes',
-  'created_at',
-  'updated_at',
-  'resolved_at',
 ] as const;
 
 export function buildProviderIssueCsv(s: AppState): string {
@@ -50,10 +46,6 @@ export function buildProviderIssueCsv(s: AppState): string {
               '',
               '',
               '',
-              '',
-              '',
-              '',
-              '',
             ]);
             continue;
           }
@@ -67,12 +59,8 @@ export function buildProviderIssueCsv(s: AppState): string {
               provider.name,
               provider.specialty ?? '',
               label?.name ?? '',
-              label?.description ?? '',
               issue.status,
               issue.notes,
-              issue.createdAt,
-              issue.updatedAt,
-              issue.resolvedAt ?? '',
             ]);
           }
         }

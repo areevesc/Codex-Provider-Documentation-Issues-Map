@@ -6,12 +6,8 @@ const REQUIRED_HEADERS = ['health_system', 'cdi_specialist', 'clinic', 'provider
 const OPTIONAL_HEADERS = [
   'specialty',
   'issue_label',
-  'issue_label_description',
   'status',
   'notes',
-  'created_at',
-  'updated_at',
-  'resolved_at',
 ] as const;
 const ALLOWED_HEADERS = new Set<string>([...REQUIRED_HEADERS, ...OPTIONAL_HEADERS]);
 
@@ -81,12 +77,8 @@ export function parseProviderCsv(csv: string): ProviderCsvParseResult {
       provider: valueFor('provider'),
       specialty: valueFor('specialty'),
       issueLabel: valueFor('issue_label'),
-      issueLabelDescription: valueFor('issue_label_description'),
       status: parseStatus(valueFor('status'), lineNumber, warnings),
       notes: valueFor('notes'),
-      createdAt: parseOptionalIso(valueFor('created_at'), 'created_at', lineNumber, warnings),
-      updatedAt: parseOptionalIso(valueFor('updated_at'), 'updated_at', lineNumber, warnings),
-      resolvedAt: parseOptionalIso(valueFor('resolved_at'), 'resolved_at', lineNumber, warnings),
     };
 
     const missingValue = REQUIRED_HEADERS.find((header) => valueFor(header) === '');
@@ -165,22 +157,6 @@ function parseStatus(
     `Line ${lineNumber}: unsupported status "${trimmed}" changed to Active. Use Active, Improving, or Resolved.`,
   );
   return 'Active';
-}
-
-function parseOptionalIso(
-  value: string,
-  fieldName: string,
-  lineNumber: number,
-  warnings: string[],
-): string | undefined {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  const date = new Date(trimmed);
-  if (Number.isNaN(date.getTime())) {
-    warnings.push(`Line ${lineNumber}: ${fieldName} is not a valid date and was ignored.`);
-    return undefined;
-  }
-  return date.toISOString();
 }
 
 function namesMatch(left: string, right: string): boolean {

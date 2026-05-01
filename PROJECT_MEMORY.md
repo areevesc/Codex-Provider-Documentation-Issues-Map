@@ -70,7 +70,7 @@ Persistent handoff notes for future Codex sessions. Update this file whenever sc
 - Current accepted headers:
 
 ```csv
-health_system,cdi_specialist,clinic,provider,specialty,issue_label,issue_label_description,status,notes,created_at,updated_at,resolved_at
+health_system,cdi_specialist,clinic,provider,specialty,issue_label,status,notes
 ```
 
 - Current implementation behavior as of this memory update:
@@ -81,7 +81,9 @@ health_system,cdi_specialist,clinic,provider,specialty,issue_label,issue_label_d
   - Import does not delete existing roster/provider issue data.
   - Demo/roster data can be cleared separately from Settings with Delete demo data.
   - Preserves the issue-label library so default/common labels remain available.
-  - Creates missing issue labels from imported `issue_label` values, using `issue_label_description` when available.
+  - Creates missing issue labels from imported `issue_label` values with blank descriptions for later Issue Library cleanup.
+  - Supported status values are Active, Improving, and Resolved; blank or invalid status imports as Active with a preview warning for invalid values.
+  - Created, updated, and resolved timestamps are set automatically on import.
   - Supports roster-only rows when `issue_label` is blank.
   - Repeats provider/org columns per issue row so exported CSVs remain sortable/filterable.
   - Deduplicates provider/org records by normalized names within the imported hierarchy.
