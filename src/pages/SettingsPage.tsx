@@ -1,8 +1,12 @@
-import { FileUp, Library, Palette, RotateCcw, ShieldAlert } from 'lucide-react';
+import { useRef, useState, type ChangeEvent } from 'react';
+import { CheckCircle2, FileUp, Library, Palette, RotateCcw, ShieldAlert } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ResetSeedButton } from '@/components/layout/ResetSeedButton';
 import { Button, ButtonLink } from '@/components/ui/Button';
+import { parseProviderCsv, previewProviderImport } from '@/lib/providerCsvImport';
+import type { ProviderCsvPreview } from '@/lib/providerCsvImport';
+import type { ProviderImportRow, ProviderImportSummary } from '@/store/useAppStore';
 
 const appearanceModes = [
   { value: 'dark', label: 'Dark' },
@@ -21,11 +25,89 @@ const colorThemes = [
 
 type ColorTheme = (typeof colorThemes)[number]['value'];
 
+interface PendingImport {
+  fileName: string;
+  rows: ProviderImportRow[];
+  preview: ProviderCsvPreview;
+  warnings: string[];
+}
+
 export function SettingsPage() {
   const appearanceMode = useAppStore((s) => s.appearanceMode);
   const colorTheme = useAppStore((s) => s.colorTheme);
   const setAppearanceMode = useAppStore((s) => s.setAppearanceMode);
   const setColorTheme = useAppStore((s) => s.setColorTheme);
+  const replaceProviderRoster = useAppStore((s) => s.replaceProviderRoster);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importSummary, setImportSummary] = useState<ProviderImportSummary | null>(null);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  const [importError, setImportError] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
+
+  async function handleImportFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setImportError('');
+    setImportSummary(null);
+    setImportWarnings([]);
+    setPendingImport(null);
+
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setImportError('Choose a .csv file.');
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setImportError('CSV file is too large. Keep imports under 1 MB for this prototype.');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const parsed = parseProviderCsv(text);
+      setPendingImport({
+        fileName: file.name,
+        rows: parsed.rows,
+        preview: previewProviderImport(parsed.rows),
+        warnings: parsed.warnings,
+      });
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'Import failed.');
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  function handleChooseImportFile() {
+    const confirmed = window.confirm(
+      [
+        'Importing this CSV will replace the current health system, CDI specialist, clinic, provider, and provider-issue assignment data in this browser.',
+        '',
+        'The issue-label library will be preserved.',
+        '',
+        'Do not include PHI: no patient names, MRNs, DOBs, encounter dates, chart text, patient-specific notes, or clinical screenshots.',
+      ].join('\n'),
+    );
+    if (!confirmed) return;
+    fileInputRef.current?.click();
+  }
+
+  function handleCancelPendingImport() {
+    setPendingImport(null);
+    setImportWarnings([]);
+    setImportError('');
+  }
+
+  function handleConfirmPendingImport() {
+    if (!pendingImport) return;
+    const summary = replaceProviderRoster(pendingImport.rows);
+    setImportSummary(summary);
+    setImportWarnings(pendingImport.warnings);
+    setPendingImport(null);
+  }
 
   return (
     <div className="h-full overflow-y-auto">
@@ -112,8 +194,8 @@ export function SettingsPage() {
             <Header icon={<FileUp className="h-4 w-4" />} title="Import" />
             <div className="space-y-3 px-4 py-4 text-sm text-ink-muted">
               <p>
-                CSV import is planned here, but not implemented yet. The intended format is one row
-                per provider:
+                Import a CSV with one row per provider. This replaces the current roster data while
+                preserving the issue-label library.
               </p>
               <pre className="overflow-x-auto rounded-md border border-line bg-surface-raised p-3 text-xs text-ink">
                 health_system,cdi_specialist,clinic,provider,specialty
@@ -122,9 +204,147 @@ export function SettingsPage() {
                 Import files must not include patient names, MRNs, DOBs, encounter dates,
                 patient-specific notes, or chart text.
               </div>
-              <Button disabled icon={<FileUp className="h-4 w-4" />}>
-                Import CSV coming soon
+              <div className="rounded-md border border-status-improving/30 bg-status-improving/10 px-3 py-2 text-xs text-status-improving">
+                Import replaces health systems, CDI specialists, clinics, providers, and existing
+                provider issue assignments in this browser. Issue labels are kept.
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleImportFile}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                disabled={isImporting}
+                icon={<FileUp className="h-4 w-4" />}
+                onClick={handleChooseImportFile}
+              >
+                {isImporting ? 'Importing...' : 'Replace roster from CSV'}
               </Button>
+              {importError && (
+                <p className="rounded-md border border-status-active/30 bg-status-active/10 px-3 py-2 text-xs text-status-active">
+                  {importError}
+                </p>
+              )}
+              {pendingImport && (
+                <div className="rounded-md border border-line bg-surface-raised p-3 text-xs">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="font-semibold text-ink">Preview import</div>
+                      <p className="mt-0.5 text-ink-muted">{pendingImport.fileName}</p>
+                    </div>
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+                      <Button size="sm" variant="ghost" onClick={handleCancelPendingImport}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" variant="primary" onClick={handleConfirmPendingImport}>
+                        Replace roster now
+                      </Button>
+                    </div>
+                  </div>
+
+                  <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <PreviewStat label="CSV rows ready" value={pendingImport.rows.length} />
+                    <PreviewStat
+                      label="Health systems"
+                      value={pendingImport.preview.healthSystemCount}
+                    />
+                    <PreviewStat
+                      label="CDI specialists"
+                      value={pendingImport.preview.specialistCount}
+                    />
+                    <PreviewStat label="Clinics" value={pendingImport.preview.clinicCount} />
+                    <PreviewStat label="Providers" value={pendingImport.preview.providerCount} />
+                    <PreviewStat
+                      label="Duplicate provider rows skipped"
+                      value={pendingImport.preview.duplicateProviderRows}
+                    />
+                  </dl>
+
+                  <div className="mt-3 rounded-md border border-status-active/30 bg-status-active/10 px-3 py-2 text-status-active">
+                    Confirming will replace current roster data and clear existing provider issue
+                    assignments. Issue labels will be kept.
+                  </div>
+
+                  {pendingImport.warnings.length > 0 && (
+                    <div className="mt-3 rounded-md border border-status-improving/30 bg-status-improving/10 px-3 py-2 text-status-improving">
+                      <div className="font-semibold">Warnings before import</div>
+                      <ul className="mt-1 list-disc space-y-1 pl-4">
+                        {pendingImport.warnings.slice(0, 5).map((warning) => (
+                          <li key={warning}>{warning}</li>
+                        ))}
+                      </ul>
+                      {pendingImport.warnings.length > 5 && (
+                        <p className="mt-1">
+                          Additional warnings: {pendingImport.warnings.length - 5}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="mt-3 overflow-hidden rounded-md border border-line">
+                    <table className="w-full text-left">
+                      <thead className="bg-surface-panel text-[10px] uppercase tracking-wider text-ink-muted">
+                        <tr>
+                          <th className="px-2 py-1.5 font-semibold">Health system</th>
+                          <th className="px-2 py-1.5 font-semibold">CDI specialist</th>
+                          <th className="px-2 py-1.5 font-semibold">Clinic</th>
+                          <th className="px-2 py-1.5 font-semibold">Provider</th>
+                          <th className="px-2 py-1.5 font-semibold">Specialty</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-line text-ink">
+                        {pendingImport.preview.sampleRows.map((row, index) => (
+                          <tr key={`${row.provider}-${index}`}>
+                            <td className="px-2 py-1.5">{row.healthSystem}</td>
+                            <td className="px-2 py-1.5">{row.cdiSpecialist}</td>
+                            <td className="px-2 py-1.5">{row.clinic}</td>
+                            <td className="px-2 py-1.5">{row.provider}</td>
+                            <td className="px-2 py-1.5">{row.specialty || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              {importSummary && (
+                <div className="rounded-md border border-status-resolved/30 bg-status-resolved/10 px-3 py-2 text-xs text-status-resolved">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Import complete
+                  </div>
+                  <dl className="mt-2 grid gap-x-4 gap-y-1 text-ink sm:grid-cols-2">
+                    <SummaryStat label="Rows processed" value={importSummary.rowsProcessed} />
+                    <SummaryStat
+                      label="Health systems created"
+                      value={importSummary.healthSystemsCreated}
+                    />
+                    <SummaryStat
+                      label="CDI specialists created"
+                      value={importSummary.specialistsCreated}
+                    />
+                    <SummaryStat label="Clinics created" value={importSummary.clinicsCreated} />
+                    <SummaryStat label="Providers created" value={importSummary.providersCreated} />
+                    <SummaryStat label="Rows skipped" value={importSummary.providersSkipped} />
+                  </dl>
+                </div>
+              )}
+              {importWarnings.length > 0 && (
+                <div className="rounded-md border border-status-improving/30 bg-status-improving/10 px-3 py-2 text-xs text-status-improving">
+                  <div className="font-semibold">Warnings</div>
+                  <ul className="mt-1 list-disc space-y-1 pl-4">
+                    {importWarnings.slice(0, 5).map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                  {importWarnings.length > 5 && (
+                    <p className="mt-1">Additional warnings: {importWarnings.length - 5}</p>
+                  )}
+                </div>
+              )}
             </div>
           </section>
 
@@ -158,6 +378,26 @@ function Header({ icon, title }: { icon: React.ReactNode; title: string }) {
       {icon}
       {title}
     </header>
+  );
+}
+
+function SummaryStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <dt className="text-ink-muted">{label}</dt>
+      <dd className="font-mono text-ink">{value}</dd>
+    </div>
+  );
+}
+
+function PreviewStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded border border-line bg-surface-panel px-2 py-1.5">
+      <dt className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">
+        {label}
+      </dt>
+      <dd className="mt-0.5 font-mono text-sm text-ink">{value}</dd>
+    </div>
   );
 }
 

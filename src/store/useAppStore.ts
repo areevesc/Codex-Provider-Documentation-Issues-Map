@@ -20,6 +20,23 @@ const STORAGE_VERSION = 5;
 
 type ById<T> = Record<string, T>;
 
+export interface ProviderImportRow {
+  healthSystem: string;
+  cdiSpecialist: string;
+  clinic: string;
+  provider: string;
+  specialty?: string;
+}
+
+export interface ProviderImportSummary {
+  rowsProcessed: number;
+  healthSystemsCreated: number;
+  specialistsCreated: number;
+  clinicsCreated: number;
+  providersCreated: number;
+  providersSkipped: number;
+}
+
 function indexById<T extends { id: string }>(items: readonly T[]): ById<T> {
   const out: ById<T> = {};
   for (const item of items) out[item.id] = item;
@@ -78,6 +95,7 @@ export interface AppState extends EntitiesSlice, UiSlice {
   createProvider(name: string, clinicId: string, specialty?: string): Provider;
   updateProvider(id: string, updates: Pick<Provider, 'name' | 'specialty'>): void;
   deleteProvider(id: string): void;
+  replaceProviderRoster(rows: ProviderImportRow[]): ProviderImportSummary;
 
   // mutations — provider issues
   assignIssueToProvider(
@@ -324,6 +342,107 @@ export const useAppStore = create<AppState>()(
         );
       },
 
+      replaceProviderRoster(rows) {
+        const summary: ProviderImportSummary = {
+          rowsProcessed: rows.length,
+          healthSystemsCreated: 0,
+          specialistsCreated: 0,
+          clinicsCreated: 0,
+          providersCreated: 0,
+          providersSkipped: 0,
+        };
+
+        set(() => {
+          const healthSystems: ById<HealthSystem> = {};
+          const specialists: ById<CDISpecialist> = {};
+          const clinics: ById<Clinic> = {};
+          const providers: ById<Provider> = {};
+
+          for (const row of rows) {
+            const healthSystemName = row.healthSystem.trim();
+            const specialistName = row.cdiSpecialist.trim();
+            const clinicName = row.clinic.trim();
+            const providerName = row.provider.trim();
+            const specialty = row.specialty?.trim() ?? '';
+
+            if (!healthSystemName || !specialistName || !clinicName || !providerName) {
+              summary.providersSkipped += 1;
+              continue;
+            }
+
+            let healthSystem = findByName(Object.values(healthSystems), healthSystemName);
+            if (!healthSystem) {
+              healthSystem = { id: newId('healthSystem'), name: healthSystemName };
+              healthSystems[healthSystem.id] = healthSystem;
+              summary.healthSystemsCreated += 1;
+            }
+
+            let specialist = Object.values(specialists).find(
+              (candidate) =>
+                candidate.healthSystemId === healthSystem.id &&
+                namesMatch(candidate.name, specialistName),
+            );
+            if (!specialist) {
+              specialist = {
+                id: newId('specialist'),
+                name: specialistName,
+                healthSystemId: healthSystem.id,
+              };
+              specialists[specialist.id] = specialist;
+              summary.specialistsCreated += 1;
+            }
+
+            let clinic = Object.values(clinics).find(
+              (candidate) =>
+                candidate.cdiSpecialistId === specialist.id && namesMatch(candidate.name, clinicName),
+            );
+            if (!clinic) {
+              clinic = {
+                id: newId('clinic'),
+                name: clinicName,
+                cdiSpecialistId: specialist.id,
+              };
+              clinics[clinic.id] = clinic;
+              summary.clinicsCreated += 1;
+            }
+
+            const provider = Object.values(providers).find(
+              (candidate) =>
+                candidate.clinicId === clinic.id && namesMatch(candidate.name, providerName),
+            );
+            if (!provider) {
+              const id = newId('provider');
+              providers[id] = {
+                id,
+                name: providerName,
+                clinicId: clinic.id,
+                ...(specialty ? { specialty } : {}),
+              };
+              summary.providersCreated += 1;
+              continue;
+            }
+
+            summary.providersSkipped += 1;
+          }
+
+          return {
+            healthSystems,
+            specialists,
+            clinics,
+            providers,
+            providerIssues: {},
+            selectedNodeId: null,
+            selectedNodeType: null,
+            specialistFilterId: null,
+            searchQuery: '',
+            graphLayoutPositions: {},
+            labelScopeProviderIds: null,
+          };
+        });
+
+        return summary;
+      },
+
       assignIssueToProvider(providerId, issueLabelId, initialNotes = '', initialAttachments = []) {
         const id = newId('providerIssue');
         const now = nowIso();
@@ -435,6 +554,18 @@ function migratePersistedState(
     ...state,
     providerIssues,
   };
+}
+
+function normalizeName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function namesMatch(left: string, right: string): boolean {
+  return normalizeName(left) === normalizeName(right);
+}
+
+function findByName<T extends { name: string }>(items: T[], name: string): T | undefined {
+  return items.find((item) => namesMatch(item.name, name));
 }
 
 function deleteOrgRecords(
