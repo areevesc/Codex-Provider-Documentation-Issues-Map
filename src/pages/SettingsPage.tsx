@@ -219,8 +219,7 @@ export function SettingsPage() {
                 health_system,cdi_specialist,clinic,provider,specialty,issue_label,issue_label_description,status,notes,created_at,updated_at,resolved_at
               </pre>
               <p className="text-xs text-ink-muted">
-                Leave issue_label blank for roster-only provider rows. Export uses the full format
-                above, one row per provider issue.
+                Export uses the full format above, one row per provider issue.
               </p>
               <div className="rounded-md border border-status-active/30 bg-status-active/10 px-3 py-2 text-xs text-status-active">
                 Imported notes must be fabricated for now. Do not include patient names, MRNs, DOBs,
